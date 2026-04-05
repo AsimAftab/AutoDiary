@@ -1,0 +1,707 @@
+[
+  {
+    "id": 1222542,
+    "date": "2026-02-27",
+    "description": "Conducted final end-to-end testing of the complete workflow pipeline with all nodes connected. Ran the workflow with production-scale data (50 zip codes, 15 subcategories) and verified correct lead extraction, deduplication, and Google Sheets output. Documented the workflow configuration and usage instructions.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how all components of an n8n lead generation workflow connect together, and the importance of end-to-end testing with realistic data volumes to catch performance and rate-limiting issues.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:28.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222541,
+    "date": "2026-02-26",
+    "description": "Optimized the Google Maps API call efficiency by implementing the Limit node to control batch sizes per loop iteration, preventing API quota exhaustion. Also fine-tuned the Settings node with configurable search radius and result limit parameters that can be adjusted without modifying the workflow logic.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to design n8n workflows with configurable parameters that allow operators to tune behavior (batch size, search radius, result limits) without editing the workflow structure.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:27.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222540,
+    "date": "2026-02-25",
+    "description": "Performed integration testing of the core workflow with real Google Maps API calls. Tested with 5 subcategories across 10 zip codes, verifying that the nested loop correctly processes all combinations. Identified and fixed an issue where the Loop Subcats node was not resetting the inner loop state properly.",
+    "hours": 8,
+    "links": null,
+    "blockers": "The inner Loop Zips was retaining state from the previous subcategory iteration, causing some zip codes to be skipped. Resolved by ensuring the loop resets on each outer iteration.",
+    "learnings": "I understood the importance of loop state management in n8n batch processing, and how nested loops require proper reset behavior to avoid data leakage between iterations.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:26.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222538,
+    "date": "2026-02-24",
+    "description": "Connected the complete core pipeline: Settings -> GS Get Zip Codes -> Zips -> Filter Zips -> Set Row Number -> Split Out -> Limit -> Loop Zips -> GS Get Subcategory -> Filter Subcategories -> Subcategory -> Loop Subcats. Verified data flows correctly through each node in the chain.",
+    "hours": 8,
+    "links": null,
+    "blockers": "The Split Out node was producing unexpected output shape when the source data had nested arrays. Fixed by configuring the correct field path for splitting.",
+    "learnings": "I learned the importance of verifying data shapes at each node connection in n8n, as subtle differences in array nesting can cause downstream nodes to fail silently.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:25.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222537,
+    "date": "2026-02-23",
+    "description": "Integrated the Remove Duplicates node after Set Place ID to eliminate duplicate leads that appear across multiple zip code searches. Configured deduplication based on the place_id field. Also connected the output to the Add rows in Google Sheets node for persisting unique leads.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how n8n's Remove Duplicates node efficiently deduplicates records by a specific field, which is essential for lead generation where the same business can appear in overlapping geographic searches.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:23.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222536,
+    "date": "2026-02-21",
+    "description": "Implemented the Set Zip node that prepares the current zip code and subcategory combination before each Google Maps API call. Connected the full inner loop chain: Set Zip -> GMaps API -> If Empty -> Place Array -> Set Place ID. Tested the loop with a small set of 3 zip codes and 2 subcategories.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how the Set node acts as a data preparation step before API calls, combining values from different loop contexts into a single payload for the HTTP Request node.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:22.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222535,
+    "date": "2026-02-20",
+    "description": "Built the Loop Subcats node using splitInBatches to iterate over business subcategories one at a time. Connected it to the inner Loop Zips node which iterates through zip codes for each subcategory. Configured the batch sizes and verified the nested loop data passing between outer and inner loops.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Getting the nested splitInBatches loops to correctly pass the current subcategory context into the inner zip code loop required careful expression referencing.",
+    "learnings": "I learned how to implement nested iteration in n8n using splitInBatches nodes, and how the outer loop context is accessible in inner loop nodes through expression references.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:21.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222534,
+    "date": "2026-02-19",
+    "description": "Implemented the Set Place ID node to extract and assign unique place identifiers from each Google Maps result. Also built the If Empty conditional node that checks whether the API returned any results, routing to the next subcategory loop iteration when empty or to the Place Array processing when results exist.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how n8n's If node enables conditional branching based on data presence, allowing the workflow to gracefully handle empty API responses without errors.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:20.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222533,
+    "date": "2026-02-18",
+    "description": "Built the Place Array code node that processes the raw Google Maps API response. The JavaScript code extracts place objects from the nested API response structure, normalizes fields (name, address, phone, rating, place_id, types), and outputs a flat array of place objects for downstream processing.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to write JavaScript inside n8n Code nodes to transform complex nested API responses into normalized flat data structures suitable for further workflow processing.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:19.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222532,
+    "date": "2026-02-17",
+    "description": "Implemented the Google Maps Places API integration using the HTTP Request node (GMaps API). Configured the request URL with dynamic query parameters built from subcategory names and zip codes using n8n expressions. Set up proper API key authentication and response parsing for the places search results.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Had to troubleshoot URL encoding issues with special characters in subcategory names when building the API query string dynamically.",
+    "learnings": "I understood how to configure n8n's HTTP Request node for REST API calls with dynamic query parameters using expression syntax like {{ $json.fieldName }}.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:18.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222531,
+    "date": "2026-02-16",
+    "description": "Set up the n8n workflow automation environment for the Google Maps lead generation project. Studied n8n's node-based architecture, HTTP Request node configuration, and data flow between nodes. Created the initial workflow skeleton with the Settings node to centralize API keys, Google Sheets spreadsheet IDs, and search radius parameters.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how n8n workflows pass data between nodes using expressions and how the Set node can be used to centralize configuration values that are referenced throughout the workflow.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:38:17.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222081,
+    "date": "2026-02-14",
+    "description": "Performance tuned the full workflow pipeline. Optimized the IntelligenceAgent's embedding batch size to reduce API calls, improved the StrategyAgent's prompt to produce more consistent JSON output, and added timeout safeguards to each agent node in the LangGraph workflow to prevent indefinite hangs.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to profile and optimize a multi-agent pipeline, and that small improvements in prompt engineering and batching strategy can significantly reduce overall execution time and cost.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:16:04.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222078,
+    "date": "2026-02-13",
+    "description": "Integrated the complete workflow with the Celery async task system. Tested the full pipeline end-to-end: source collection -> web research -> intelligence analysis -> strategy generation -> content creation. Fixed edge cases in error propagation between agents.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how all the components fit together in the full pipeline and how proper error propagation ensures failures in one agent don't silently corrupt downstream results.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:16:03.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222077,
+    "date": "2026-02-12",
+    "description": "Built the TrendReefWorkflow using LangGraph with a 5-node linear pipeline: source_step -> research_step -> intelligence_step -> strategy_step -> content_step. Each node wraps its respective agent and passes state through the workflow graph.",
+    "hours": 8,
+    "links": null,
+    "blockers": "LangGraph's state management required careful design to pass data between nodes. I had to define the state schema to accommodate all intermediate results.",
+    "learnings": "I learned how LangGraph orchestrates multi-agent workflows, managing state transitions and enabling both synchronous and asynchronous execution.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:16:03.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222076,
+    "date": "2026-02-11",
+    "description": "Implemented the AnalyticsAgent for event tracking and reinforcement scoring, and the PublisherAgent as a plugin-ready stub for future publishing integrations. Also created the ResearchResultNormalizer for optional LLM-based normalization of raw crawl results.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to design agents as extensible stubs that can be enhanced later without modifying the workflow, following the open-closed principle.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:16:01.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222075,
+    "date": "2026-02-10",
+    "description": "Built the ContentGeneratorAgent for LLM-based content creation. It takes strategy JSON and trend data as input, generates platform-specific content, validates the output structure, and persists results to the generated_content table with draft status.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how to chain strategy output into content generation, creating a pipeline where each agent's output becomes the next agent's input.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:16:00.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222074,
+    "date": "2026-02-09",
+    "description": "Implemented the StrategyAgent for LLM-based strategy generation. It takes trend summaries as input and produces structured JSON output with audience, tone, platform, content_format, and hook_strategy fields through a carefully crafted prompt.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to design LLM prompts that produce consistently structured JSON output, and how to validate the response against expected schema.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:59.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222073,
+    "date": "2026-02-07",
+    "description": "Built the IntelligenceAgent with four processing stages: deduplication (by content_hash), clustering (keyword-based grouping), trend scoring with weighted formula (engagement 0.4, cross-platform 0.2, sentiment 0.2, recency 0.2), and vector embedding generation using text-embedding-3-small.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Designing the trend scoring formula required balancing multiple signals. The recency weight calculation using exponential decay needed several iterations to feel right.",
+    "learnings": "I learned how to build a trend analysis pipeline that combines deduplication, clustering, scoring, and embedding generation into a coherent intelligence layer.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:58.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222072,
+    "date": "2026-02-06",
+    "description": "Implemented the WebResearchAgent that orchestrates the full research lifecycle. It calls CrawlerService with preference routing, persists job metadata (request payload, provider, status, duration, result) to the external_research_jobs table, and optionally normalizes results.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to build an agent that manages the full lifecycle of an external operation, including status tracking, error capture, and duration measurement.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:57.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222069,
+    "date": "2026-02-05",
+    "description": "Built the CrawlRouter for resolving crawler provider sequences based on request preference (auto/tinyfish/playwright) and tenant feature flags. Also implemented the unified CrawlerService with automatic fallback from TinyFish to Playwright on failure.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how provider routing with fallback chains improves reliability in web research, ensuring results even when the primary provider is unavailable.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:55.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222068,
+    "date": "2026-02-04",
+    "description": "Implemented the crawler system: BaseCrawlerProvider abstract class with CrawlRequest/CrawlResponse contracts, TinyFishCrawlerProvider adapter wrapping the SSE client, and PlaywrightCrawlerProvider for local browser-based crawling with Chromium.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to design a pluggable crawler architecture that supports both external API-based crawling and local browser automation as interchangeable providers.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:54.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222067,
+    "date": "2026-02-03",
+    "description": "Built the TinyFish SSE client (TinyFishAutomationClient) for streaming web research. Implemented SSE line parsing with 'data:' prefix detection, partial chunk buffering, safe JSON decoding, retry logic (3 attempts), and 90-second timeout handling.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Handling partial SSE chunks that split across network packets required implementing a line buffer to reassemble complete JSON objects.",
+    "learnings": "I learned how Server-Sent Events (SSE) streaming works and how to build a robust client that handles partial data, malformed lines, and connection retries.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:53.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222066,
+    "date": "2026-02-02",
+    "description": "Implemented the SourceAgent for mock social media data ingestion. It generates realistic sample posts from Reddit, RSS, and X (Twitter) with normalized fields including platform, title, body, engagement metrics, timestamps, URLs, and content hashes.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how to design mock data agents that simulate real social media feeds with realistic engagement metrics for development and testing purposes.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:52.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222065,
+    "date": "2026-01-31",
+    "description": "Built the ProviderHealthService that aggregates health check results across all configured providers. This feeds the /provider-health API endpoint, giving operators visibility into which providers are available.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how aggregated health checks help in monitoring multi-provider systems and how they can inform automatic routing decisions.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:51.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222064,
+    "date": "2026-01-30",
+    "description": "Integrated all resilience patterns into the unified LLMService. It provides a single entry point for all agent LLM calls, enforcing provider ordering (primary then secondary), circuit breaker checks, rate limiting, latency measurement, and token/cost logging.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how to compose multiple resilience patterns into a cohesive service that degrades gracefully instead of failing catastrophically.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:50.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222062,
+    "date": "2026-01-29",
+    "description": "Built the circuit breaker and async rate limiter services. The circuit breaker tracks per-provider failure counts and opens after a threshold, blocking requests for a reset period. The rate limiter uses aiolimiter for per-provider request throttling at 120 req/min.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Designing the circuit breaker state transitions (closed -> open -> half-open) required careful handling of concurrent access in an async environment.",
+    "learnings": "I learned how circuit breaker and rate limiting patterns work in distributed systems to prevent cascading failures and API quota exhaustion.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:49.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222060,
+    "date": "2026-01-28",
+    "description": "Implemented the ModelRouter service for tenant-aware provider and model resolution. It reads from tenant_model_preferences to determine primary and secondary providers per agent_name and task_type, with configurable fallback defaults.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how multi-tenant model routing works, allowing each tenant to configure different LLM providers for different use cases while maintaining sensible defaults.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:47.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222058,
+    "date": "2026-01-27",
+    "description": "Built the provider registry module using the factory pattern. The registry dynamically instantiates provider objects based on configuration, allowing new providers to be added without modifying existing code.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how the factory/registry pattern enables extensibility in plugin-based architectures, making it easy to add new LLM providers in the future.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:46.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222057,
+    "date": "2026-01-26",
+    "description": "Implemented the AzureProvider (Azure OpenAI) and OllamaProvider (local Ollama) adapters. Azure uses a different endpoint structure with API version parameters. Ollama connects to a local inference server for cost-free development.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood how Azure OpenAI differs from standard OpenAI in terms of endpoint configuration, and how Ollama provides a local alternative for development without API costs.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:45.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222056,
+    "date": "2026-01-24",
+    "description": "Built the OpenAI and Anthropic provider implementations. OpenAIProvider wraps the chat-completions API, while AnthropicProvider wraps the messages API. Both implement generate(), health_check(), and estimate_cost() with proper error handling.",
+    "hours": 8,
+    "links": null,
+    "blockers": "The Anthropic API uses a different message format (system prompt is separate from messages), which required careful adaptation in the provider.",
+    "learnings": "I gained hands-on experience integrating two different LLM APIs and mapping their responses to a unified data contract.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:44.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222055,
+    "date": "2026-01-23",
+    "description": "Implemented the BaseLLMProvider abstract class with abstract methods for generate(), health_check(), and estimate_cost(). Also created the service contracts module with LLMRequest, LLMResponse, and LLMUsage dataclasses for standardized data exchange.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to design clean abstract interfaces in Python using ABC that enforce consistent implementation across multiple provider adapters.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:42.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 1222054,
+    "date": "2026-01-22",
+    "description": "**Research Day.** Studied the APIs and documentation of four LLM providers: OpenAI, Anthropic (Claude), Azure OpenAI, and Ollama. Designed the abstraction layer architecture for a pluggable multi-provider LLM system with fallback support.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I understood the differences in API contracts between OpenAI, Anthropic, Azure, and Ollama, and how to design a common interface that abstracts these differences.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-26T19:15:41.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702345,
+    "date": "2026-01-21",
+    "description": "I updated the backend logic to store the selected \"Inquiry Type\" from the contact form into the database upon submission.",
+    "hours": 8,
+    "links": null,
+    "blockers": "The changes did not reflect initially because I forgot to restart the server, but restarting resolved the issue.",
+    "learnings": "I understood the complete data flow from frontend form submission to backend processing and database storage.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:33.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702343,
+    "date": "2026-01-20",
+    "description": "Today I shifted to a frontend assignment. I modified the \"Contact Us\" page by adding a new dropdown field labeled \"Inquiry Type.\"",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I refreshed my React knowledge by integrating a new form field and ensuring proper functionality.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:32.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702340,
+    "date": "2026-01-19",
+    "description": "I worked on the \"Transform\" phase of the ETL pipeline, writing functions to remove null entries and standardize date formats.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I strengthened my skills in using Pandas to clean and structure inconsistent datasets.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:31.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702339,
+    "date": "2026-01-17",
+    "description": "I presented my implementation to a senior developer for feedback. They suggested improvements in variable naming and code clarity, which I updated accordingly.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I realized the value of clean, readable code and following consistent naming conventions.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:30.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702338,
+    "date": "2026-01-16",
+    "description": "I began implementing the \"Extract\" component of the ETL system, focusing on retrieving raw data in manageable batches to prevent memory overload.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned to use Python generators to efficiently process large datasets without consuming excessive memory.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:29.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702337,
+    "date": "2026-01-15",
+    "description": "Research Day. I reviewed internal documentation about the new \"ETL Project,\" which aims to automate daily user data cleaning processes.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I created a simple workflow diagram to visualize how data should move through each stage, which helped structure my understanding.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:28.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702334,
+    "date": "2026-01-14",
+    "description": "Research Day. I investigated performance issues in my Python script and explored ways to optimize data handling. I studied the Pandas library for efficient data analysis.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I discovered that Pandas provides faster and more efficient data manipulation compared to manual looping in Python.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:26.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702332,
+    "date": "2026-01-13",
+    "description": "I developed a basic Python script to calculate how many users performed a certain action. I connected to the database and executed queries using Python libraries.",
+    "hours": 8,
+    "links": null,
+    "blockers": "Initially, the script executed slowly because I retrieved too much data in a single query.",
+    "learnings": "I learned how to connect Python to MongoDB and run database queries. Seeing actual output data was very motivating.",
+    "mood_slider": 4,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:25.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 702331,
+    "date": "2026-01-10",
+    "description": "We conducted our weekly team meeting via Google Meet to outline plans for the upcoming week. My mentor informed me that I would begin working with the database soon.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I became more confident in remote communication and clearly understood my upcoming responsibilities.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:53:24.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 700564,
+    "date": "2026-01-12",
+    "description": "On the sixth day of my internship, I worked on creating interactive dashboards using the processed dataset. I organized and transformed the data using SQL and Python to make it suitable for reporting. I focused on identifying key performance indicators and visualizing them effectively using charts and summary metrics.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how to convert analytical results into meaningful dashboards and understood the importance of selecting appropriate KPIs for decision-making. I also improved my data visualization and reporting skills.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T16:10:40.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 699791,
+    "date": "2026-01-09",
+    "description": "On the fifth day of my internship, I worked on performing structured data analysis using SQL queries and Python. I practiced writing queries to filter, aggregate, and extract meaningful information from the dataset. This helped me better understand how data is stored and retrieved efficiently.\n\nI also worked on generating summarized outputs and validating results to ensure accuracy. Under the guidance of my mentor, I learned how to optimize queries and follow best practices for writing clean and efficient code.\n\nAdditionally, I started preparing basic reports based on the analyzed data to understand how insights are presented in a professional environment.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how SQL plays a crucial role in data analysis and how querying structured data helps in extracting meaningful insights. I improved my ability to analyze datasets logically and interpret results correctly. This day strengthened my understanding of real-world data handling and analytical workflows.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-02-15T15:49:00.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 75370,
+    "date": "2026-01-08",
+    "description": "On the fourth day of my internship, I focused on analyzing the processed data and understanding how insights are derived from it. I performed basic exploratory data analysis to identify trends, patterns, and relationships within the dataset.\n\nI also learned how to use simple data visualization techniques to represent the analyzed data in a clear and meaningful way. Under mentor guidance, I explored different types of charts and understood when to use each visualization based on the data and requirements.\n\nAdditionally, I discussed best practices for presenting analytical results and maintaining clarity and accuracy in reports.",
+    "hours": 0,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how data visualization helps in effectively communicating insights and supports data-driven decision-making. I gained a better understanding of analyzing datasets beyond preprocessing and transforming raw data into meaningful visual outputs. This day enhanced my analytical thinking and presentation skills",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-01-13T18:23:34.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 73786,
+    "date": "2026-01-07",
+    "description": "On the third day of my internship, I started working more practically with the project data. I explored sample datasets used in the project and understood their structure, columns, and data types. I practiced loading and inspecting data to identify missing values, inconsistencies, and basic patterns.\n\nI also revised and applied basic data cleaning techniques such as handling null values, filtering data, and performing simple transformations. Under mentor guidance, I learned how these preprocessing steps are important for accurate data analysis and reporting.\n\nAdditionally, I followed the project’s coding and version control guidelines and practiced committing changes to the repository.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned the importance of data preprocessing and how clean data plays a key role in meaningful analysis. I gained hands-on experience with basic data exploration and understood how theoretical data analysis concepts are applied in real projects. This day helped improve my confidence in working with data and using tools effectively.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-01-12T13:48:56.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 72939,
+    "date": "2026-01-06",
+    "description": "On the second day of my internship, I focused on gaining a deeper understanding of the project and its technical aspects. I explored the project repository in detail to understand the folder structure, code flow, and data pipelines used in the application.\n\nI studied the data sources, data formats, and the overall data processing workflow. I also reviewed basic concepts related to data analysis, data cleaning, and version control practices followed in the project. Under mentor guidance, I clarified doubts related to the development workflow and best practices to be followed during implementation.\n\nAdditionally, I began revising key tools and technologies required for the internship to prepare for upcoming hands-on tasks.",
+    "hours": 8,
+    "links": null,
+    "blockers": null,
+    "learnings": "I learned how real-world projects are structured and managed using version control systems. I gained clarity on the data flow, project architecture, and the role of a data analyst engineer in handling and analyzing data. This day helped me strengthen my foundational understanding and prepared me to start contributing practically to the project.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-01-11T22:34:55.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  },
+  {
+    "id": 72171,
+    "date": "2026-01-05",
+    "description": "On the first day of my internship, I was introduced to the internship structure, objectives, and expectations. I received access to the project repository and was guided on how the project is organized and managed.\n\nI was informed about the tools and technologies required for the internship and completed the initial setup. I also discussed what topics and concepts need to be studied to effectively contribute to the project.\n\nAdditionally, my roles and responsibilities were clearly explained, and I received guidance from my mentor regarding the workflow, learning approach, and future tasks. Overall, the first day helped me gain clarity about the internship, project requirements, and learning path.",
+    "hours": 6,
+    "links": null,
+    "blockers": null,
+    "learnings": "Through the orientation and discussions on the first day, I gained an understanding of the organization’s vision, mission, and long-term goals. I learned how the organization focuses on delivering quality solutions while encouraging continuous learning, innovation, and professional growth.",
+    "mood_slider": 5,
+    "status": 1,
+    "created_at": "2026-01-10T17:19:07.000000Z",
+    "internship": {
+      "name": "Data Analyst Engineer Internship"
+    }
+  }
+]

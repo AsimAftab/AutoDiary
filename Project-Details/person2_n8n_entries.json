@@ -1,0 +1,153 @@
+[
+  {
+    "date": "2026-02-16",
+    "description": "Designed the Google Sheets data schema for the lead generation workflow. Created three sheets: Zip Codes (zip, city, state, status), Subcategories (category, subcategory, enabled flag), and Leads Output (business name, address, phone, rating, place_id, category, zip, timestamp). Structured columns for efficient n8n read/write operations.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design a spreadsheet schema that serves as both a data store and a control panel for an n8n workflow, using status columns and enabled flags to manage processing state.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-02-17",
+    "description": "Implemented the GS - Get Zip Codes node to read zip code data from the Google Sheets input sheet. Configured the Google Sheets OAuth2 credentials, set the correct spreadsheet ID and sheet name, and verified the node correctly returns all rows with zip, city, and state fields.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Setting up the Google Sheets OAuth2 credentials in n8n required creating a service account in Google Cloud Console and configuring the correct scopes.",
+    "learnings": "I understood how to set up Google Sheets API authentication in n8n using OAuth2 credentials, and how n8n maps spreadsheet rows to individual data items.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "14",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-02-18",
+    "description": "Built the Zips Set node to normalize the raw zip code data from Google Sheets into a clean format. Implemented the Filter Zips node with conditions to exclude already-processed zip codes (based on status column) and invalid entries, ensuring only pending zip codes are processed.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to use n8n's Filter node with multiple conditions to create data validation gates, preventing the workflow from reprocessing already-completed zip codes.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-02-19",
+    "description": "Implemented the GS - Get Subcategory node to read business subcategories from the Google Sheets configuration sheet. Built the Filter Subcategories node to only include enabled subcategories, and the Subcategory Set node to normalize each subcategory record with clean field names for downstream processing.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how separating the subcategory list into a dedicated Google Sheet allows non-technical users to add or disable business categories without modifying the n8n workflow.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44",
+      "91"
+    ]
+  },
+  {
+    "date": "2026-02-20",
+    "description": "Built the Set Row Number node to track which spreadsheet row corresponds to each zip code, enabling status updates after processing. Implemented the Split Out node to expand multi-value fields from the zip code data into individual items for batch processing.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how row number tracking is essential for updating specific rows in Google Sheets after processing, and how the Split Out node expands nested arrays into individual workflow items.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-02-21",
+    "description": "Implemented the Limit node to control the number of zip codes processed per workflow execution, preventing API quota exhaustion and Google Sheets write rate limits. Configured the batch size to process 20 zip codes per run, balancing throughput with rate limits.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how the Limit node acts as a throttle in n8n workflows, which is critical for workflows that interact with rate-limited external APIs like Google Maps.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-23",
+    "description": "Built the Remove Duplicates node configured to deduplicate leads by the place_id field. Tested with sample data containing overlapping results from adjacent zip code searches and verified that only unique businesses are retained for output.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how data deduplication on a unique identifier (place_id) is essential in geographic lead generation, where nearby zip code searches produce significant result overlap.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44",
+      "91"
+    ]
+  },
+  {
+    "date": "2026-02-24",
+    "description": "Implemented the Add rows in Google Sheets node to write discovered leads to the output spreadsheet. Configured column mapping to write business name, full address, phone number, website, rating, total reviews, place_id, subcategory, zip code, and discovery timestamp.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Had to handle cases where some Google Maps results have missing phone numbers or websites. Used n8n expressions with fallback values to write empty strings instead of undefined.",
+    "learnings": "I understood how to handle optional fields when writing to Google Sheets from n8n, using expression fallbacks to ensure consistent column data even when API responses have missing fields.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "19",
+      "91"
+    ]
+  },
+  {
+    "date": "2026-02-25",
+    "description": "Built the GS - Get Status node for reading the current processing status of each zip code from the tracking sheet. Implemented the Update Status to Success node that marks zip codes as completed after all their leads have been successfully written to the output sheet.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how status tracking in Google Sheets creates a checkpoint system that allows the workflow to resume from where it left off if interrupted, rather than reprocessing all zip codes.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-02-26",
+    "description": "Connected the complete data pipeline: GS Get Zip Codes -> Zips -> Filter Zips -> Set Row Number -> Split Out -> Limit -> processing -> Remove Duplicates -> Add rows -> Get Status -> Update Status. Tested the full data flow with 10 zip codes to verify correct read, process, write, and status update cycle.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The Update Status to Success node was updating the wrong row because the row number reference was lost during the loop iterations. Fixed by preserving the row number through all intermediate nodes.",
+    "learnings": "I understood how data context can be lost in complex n8n workflows with loops, and the importance of carrying tracking metadata (like row numbers) through every node in the pipeline.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "44",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-27",
+    "description": "Validated the complete Google Sheets data pipeline with production data. Verified leads output formatting, confirmed no duplicate entries, and checked that status tracking correctly marks processed zip codes. Also tested the workflow's ability to resume from interrupted runs by only processing pending zip codes.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how idempotent workflow design with status tracking enables safe re-execution, which is critical for long-running data processing workflows that may be interrupted by API errors or rate limits.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "44",
+      "91",
+      "73"
+    ]
+  }
+]

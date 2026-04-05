@@ -1,0 +1,279 @@
+[
+  {
+    "date": "2026-01-22",
+    "description": "**Research Day.** Studied the APIs and documentation of four LLM providers: OpenAI, Anthropic (Claude), Azure OpenAI, and Ollama. Designed the abstraction layer architecture for a pluggable multi-provider LLM system with fallback support.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood the differences in API contracts between OpenAI, Anthropic, Azure, and Ollama, and how to design a common interface that abstracts these differences.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "15",
+      "28"
+    ]
+  },
+  {
+    "date": "2026-01-23",
+    "description": "Implemented the BaseLLMProvider abstract class with abstract methods for generate(), health_check(), and estimate_cost(). Also created the service contracts module with LLMRequest, LLMResponse, and LLMUsage dataclasses for standardized data exchange.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design clean abstract interfaces in Python using ABC that enforce consistent implementation across multiple provider adapters.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-01-24",
+    "description": "Built the OpenAI and Anthropic provider implementations. OpenAIProvider wraps the chat-completions API, while AnthropicProvider wraps the messages API. Both implement generate(), health_check(), and estimate_cost() with proper error handling.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The Anthropic API uses a different message format (system prompt is separate from messages), which required careful adaptation in the provider.",
+    "learnings": "I gained hands-on experience integrating two different LLM APIs and mapping their responses to a unified data contract.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "28"
+    ]
+  },
+  {
+    "date": "2026-01-26",
+    "description": "Implemented the AzureProvider (Azure OpenAI) and OllamaProvider (local Ollama) adapters. Azure uses a different endpoint structure with API version parameters. Ollama connects to a local inference server for cost-free development.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how Azure OpenAI differs from standard OpenAI in terms of endpoint configuration, and how Ollama provides a local alternative for development without API costs.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "13"
+    ]
+  },
+  {
+    "date": "2026-01-27",
+    "description": "Built the provider registry module using the factory pattern. The registry dynamically instantiates provider objects based on configuration, allowing new providers to be added without modifying existing code.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how the factory/registry pattern enables extensibility in plugin-based architectures, making it easy to add new LLM providers in the future.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-01-28",
+    "description": "Implemented the ModelRouter service for tenant-aware provider and model resolution. It reads from tenant_model_preferences to determine primary and secondary providers per agent_name and task_type, with configurable fallback defaults.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how multi-tenant model routing works, allowing each tenant to configure different LLM providers for different use cases while maintaining sensible defaults.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-01-29",
+    "description": "Built the circuit breaker and async rate limiter services. The circuit breaker tracks per-provider failure counts and opens after a threshold, blocking requests for a reset period. The rate limiter uses aiolimiter for per-provider request throttling at 120 req/min.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Designing the circuit breaker state transitions (closed -> open -> half-open) required careful handling of concurrent access in an async environment.",
+    "learnings": "I learned how circuit breaker and rate limiting patterns work in distributed systems to prevent cascading failures and API quota exhaustion.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-01-30",
+    "description": "Integrated all resilience patterns into the unified LLMService. It provides a single entry point for all agent LLM calls, enforcing provider ordering (primary then secondary), circuit breaker checks, rate limiting, latency measurement, and token/cost logging.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to compose multiple resilience patterns into a cohesive service that degrades gracefully instead of failing catastrophically.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-01-31",
+    "description": "Built the ProviderHealthService that aggregates health check results across all configured providers. This feeds the /provider-health API endpoint, giving operators visibility into which providers are available.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how aggregated health checks help in monitoring multi-provider systems and how they can inform automatic routing decisions.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3"
+    ]
+  },
+  {
+    "date": "2026-02-02",
+    "description": "Implemented the SourceAgent for mock social media data ingestion. It generates realistic sample posts from Reddit, RSS, and X (Twitter) with normalized fields including platform, title, body, engagement metrics, timestamps, URLs, and content hashes.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to design mock data agents that simulate real social media feeds with realistic engagement metrics for development and testing purposes.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-02-03",
+    "description": "Built the TinyFish SSE client (TinyFishAutomationClient) for streaming web research. Implemented SSE line parsing with 'data:' prefix detection, partial chunk buffering, safe JSON decoding, retry logic (3 attempts), and 90-second timeout handling.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Handling partial SSE chunks that split across network packets required implementing a line buffer to reassemble complete JSON objects.",
+    "learnings": "I learned how Server-Sent Events (SSE) streaming works and how to build a robust client that handles partial data, malformed lines, and connection retries.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3"
+    ]
+  },
+  {
+    "date": "2026-02-04",
+    "description": "Implemented the crawler system: BaseCrawlerProvider abstract class with CrawlRequest/CrawlResponse contracts, TinyFishCrawlerProvider adapter wrapping the SSE client, and PlaywrightCrawlerProvider for local browser-based crawling with Chromium.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design a pluggable crawler architecture that supports both external API-based crawling and local browser automation as interchangeable providers.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3"
+    ]
+  },
+  {
+    "date": "2026-02-05",
+    "description": "Built the CrawlRouter for resolving crawler provider sequences based on request preference (auto/tinyfish/playwright) and tenant feature flags. Also implemented the unified CrawlerService with automatic fallback from TinyFish to Playwright on failure.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how provider routing with fallback chains improves reliability in web research, ensuring results even when the primary provider is unavailable.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-06",
+    "description": "Implemented the WebResearchAgent that orchestrates the full research lifecycle. It calls CrawlerService with preference routing, persists job metadata (request payload, provider, status, duration, result) to the external_research_jobs table, and optionally normalizes results.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to build an agent that manages the full lifecycle of an external operation, including status tracking, error capture, and duration measurement.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43"
+    ]
+  },
+  {
+    "date": "2026-02-07",
+    "description": "Built the IntelligenceAgent with four processing stages: deduplication (by content_hash), clustering (keyword-based grouping), trend scoring with weighted formula (engagement 0.4, cross-platform 0.2, sentiment 0.2, recency 0.2), and vector embedding generation using text-embedding-3-small.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Designing the trend scoring formula required balancing multiple signals. The recency weight calculation using exponential decay needed several iterations to feel right.",
+    "learnings": "I learned how to build a trend analysis pipeline that combines deduplication, clustering, scoring, and embedding generation into a coherent intelligence layer.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "15",
+      "17"
+    ]
+  },
+  {
+    "date": "2026-02-09",
+    "description": "Implemented the StrategyAgent for LLM-based strategy generation. It takes trend summaries as input and produces structured JSON output with audience, tone, platform, content_format, and hook_strategy fields through a carefully crafted prompt.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design LLM prompts that produce consistently structured JSON output, and how to validate the response against expected schema.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "28"
+    ]
+  },
+  {
+    "date": "2026-02-10",
+    "description": "Built the ContentGeneratorAgent for LLM-based content creation. It takes strategy JSON and trend data as input, generates platform-specific content, validates the output structure, and persists results to the generated_content table with draft status.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to chain strategy output into content generation, creating a pipeline where each agent's output becomes the next agent's input.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "28"
+    ]
+  },
+  {
+    "date": "2026-02-11",
+    "description": "Implemented the AnalyticsAgent for event tracking and reinforcement scoring, and the PublisherAgent as a plugin-ready stub for future publishing integrations. Also created the ResearchResultNormalizer for optional LLM-based normalization of raw crawl results.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design agents as extensible stubs that can be enhanced later without modifying the workflow, following the open-closed principle.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "16"
+    ]
+  },
+  {
+    "date": "2026-02-12",
+    "description": "Built the TrendReefWorkflow using LangGraph with a 5-node linear pipeline: source_step -> research_step -> intelligence_step -> strategy_step -> content_step. Each node wraps its respective agent and passes state through the workflow graph.",
+    "hours": 8,
+    "links": "",
+    "blockers": "LangGraph's state management required careful design to pass data between nodes. I had to define the state schema to accommodate all intermediate results.",
+    "learnings": "I learned how LangGraph orchestrates multi-agent workflows, managing state transitions and enabling both synchronous and asynchronous execution.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "15",
+      "28"
+    ]
+  },
+  {
+    "date": "2026-02-13",
+    "description": "Integrated the complete workflow with the Celery async task system. Tested the full pipeline end-to-end: source collection -> web research -> intelligence analysis -> strategy generation -> content creation. Fixed edge cases in error propagation between agents.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how all the components fit together in the full pipeline and how proper error propagation ensures failures in one agent don't silently corrupt downstream results.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "15",
+      "28",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-14",
+    "description": "Performance tuned the full workflow pipeline. Optimized the IntelligenceAgent's embedding batch size to reduce API calls, improved the StrategyAgent's prompt to produce more consistent JSON output, and added timeout safeguards to each agent node in the LangGraph workflow to prevent indefinite hangs.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to profile and optimize a multi-agent pipeline, and that small improvements in prompt engineering and batching strategy can significantly reduce overall execution time and cost.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "15",
+      "28",
+      "39"
+    ]
+  }
+]

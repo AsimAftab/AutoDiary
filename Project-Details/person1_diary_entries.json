@@ -1,0 +1,289 @@
+[
+  {
+    "date": "2026-01-22",
+    "description": "Initialized the TrendReef backend project structure. Created the FastAPI application skeleton with the app/ directory hierarchy including core/, api/, models/, services/, agents/, workflows/, and workers/ packages. Installed all Python dependencies and finalized requirements.txt.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to structure a large-scale FastAPI project with proper package separation for scalability and maintainability.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "63"
+    ]
+  },
+  {
+    "date": "2026-01-23",
+    "description": "Implemented the core configuration module using Pydantic Settings for environment variable management. Set up the async SQLAlchemy engine with asyncpg driver for PostgreSQL connectivity. Also configured structured JSON logging with python-json-logger.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how Pydantic Settings can load configuration from .env files with type validation, and how async SQLAlchemy differs from synchronous usage.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-01-24",
+    "description": "Designed and implemented the first set of ORM database models in entities.py. Created the UUIDTimestampMixin base class for consistent ID and timestamp fields, then built the Tenant, User, Source, and RawPost models with proper relationships and constraints.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design SQLAlchemy models with UUID primary keys and reusable mixins. Understanding foreign key relationships in an async ORM context was very insightful.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "19",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-01-26",
+    "description": "Continued building database models. Implemented ProcessedTrend, Embedding (with pgvector 1536-dimension vector column), GeneratedContent, AnalyticsEvent, and ExternalResearchJob entities. Each model includes tenant_id for multi-tenant isolation.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Had difficulty configuring the pgvector Vector type in SQLAlchemy, but resolved it by importing from pgvector.sqlalchemy.",
+    "learnings": "I learned how pgvector integrates with SQLAlchemy to store high-dimensional vector embeddings directly in PostgreSQL.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "43",
+      "44",
+      "19"
+    ]
+  },
+  {
+    "date": "2026-01-27",
+    "description": "Built the model governance entities: ModelProvider, ModelConfig, TenantModelPreference, and ModelUsageLog. These tables allow per-tenant configuration of LLM providers and tracking of token usage, latency, and estimated costs.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to design a multi-tenant model governance schema that supports per-agent and per-task-type provider preferences with primary/secondary fallback.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "44",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-01-28",
+    "description": "Set up Alembic for database migrations. Configured alembic.ini and the migration environment (env.py) to work with async SQLAlchemy. Created the initial migration script (0001_initial_trendreef_schema.py) which includes pgvector extension creation and all table definitions.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The async engine required special handling in the Alembic env.py using run_async. Took time to debug the correct approach.",
+    "learnings": "I learned how to configure Alembic for async SQLAlchemy with asyncpg, including how to enable PostgreSQL extensions like pgvector within migrations.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "43",
+      "20"
+    ]
+  },
+  {
+    "date": "2026-01-29",
+    "description": "Designed all Pydantic request/response schemas in schemas.py. Created models for SourceCreate, SourceResponse, GenerateRequest, GenerateResponse, ResearchRequest, ResearchResponse, RunWorkflowRequest, WorkflowResponse, and AnalyticsEventCreate.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design clean API contracts using Pydantic v2 models with proper validation, optional fields, and JSON serialization for complex nested structures.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-01-30",
+    "description": "Implemented the health check endpoints (/health and /provider-health) and the source CRUD API routes (GET /sources, POST /sources). Added the X-Tenant-ID header dependency for tenant isolation across all business endpoints.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how FastAPI's Depends() mechanism works for injecting tenant context and database sessions into route handlers.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43"
+    ]
+  },
+  {
+    "date": "2026-01-31",
+    "description": "Built the trends API route (GET /trends) for listing processed trends with score breakdowns, and the research API routes (POST /research for running web research, GET /research for listing research jobs). Each route enforces tenant isolation.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to structure FastAPI routes that delegate to service/agent layers while keeping the route handlers thin and focused on HTTP concerns.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43"
+    ]
+  },
+  {
+    "date": "2026-02-02",
+    "description": "Implemented the generate API route (POST /generate) for triggering strategy and content generation, and the analytics routes (GET /analytics, POST /analytics) for tracking and creating analytics events.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I gained experience in handling JSON payload responses from LLM-based generation services and persisting structured results to the database.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43"
+    ]
+  },
+  {
+    "date": "2026-02-03",
+    "description": "Built the workflow execution endpoint (POST /run-workflow) supporting both synchronous and asynchronous execution modes. The async mode enqueues a Celery task and returns a task_id, while sync mode blocks until the full pipeline completes.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Integrating the async Celery task dispatch from within an async FastAPI handler required careful handling to avoid blocking the event loop.",
+    "learnings": "I understood the tradeoffs between sync and async workflow execution, and how to dispatch Celery tasks from within FastAPI's async context.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-04",
+    "description": "Set up the master API router (router.py) mounting all route modules under the /api/v1 prefix. Also implemented the core dependencies module for X-Tenant-ID header validation and database session injection.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to organize a large FastAPI application with modular route registration and shared dependency injection.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3"
+    ]
+  },
+  {
+    "date": "2026-02-05",
+    "description": "Implemented the repository layer: model_repository.py for accessing model configs, tenant preferences, and usage logs; and research_repository.py for persisting and querying external research jobs. Used async SQLAlchemy select/insert patterns.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to implement a clean repository pattern with async SQLAlchemy, separating data access concerns from business logic.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "20"
+    ]
+  },
+  {
+    "date": "2026-02-06",
+    "description": "Created the seed_defaults.py script in the scripts/ directory. This seeds a demo tenant, default LLM provider configurations (OpenAI, Ollama), and tenant model preferences for each agent type. Useful for local development setup.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood the importance of seed scripts for developer experience and how they help new team members get started quickly with realistic test data.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43"
+    ]
+  },
+  {
+    "date": "2026-02-07",
+    "description": "Finalized the main.py FastAPI application entry point. Added CORS middleware configuration, startup event handlers for pgvector extension initialization, and integrated all route modules. Performed end-to-end API testing with Postman to verify all endpoints.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to configure CORS properly for a SaaS application and how startup events in FastAPI can initialize database extensions.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-09",
+    "description": "Implemented global error handling middleware for the FastAPI application. Added structured error responses with proper HTTP status codes, request validation error formatting, and tenant-context-aware error logging for easier debugging in production.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to build centralized error handling in FastAPI using exception handlers and middleware, ensuring consistent error response formats across all endpoints.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-10",
+    "description": "Optimized database query performance by adding composite indexes on frequently filtered columns (tenant_id + created_at) across RawPost, ProcessedTrend, and GeneratedContent tables. Updated the Alembic migration to include index definitions.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Identifying the right columns for composite indexes required analyzing the query patterns used by all API routes and agents.",
+    "learnings": "I understood how database indexing strategies directly impact query performance, especially in multi-tenant systems where tenant_id is part of every query filter.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "43",
+      "20",
+      "45"
+    ]
+  },
+  {
+    "date": "2026-02-11",
+    "description": "Added pagination support to all listing API endpoints (sources, trends, research jobs, analytics events). Implemented offset-based pagination with configurable page_size and page query parameters, and included total_count in response metadata.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to implement consistent pagination across multiple endpoints using shared query parameter schemas and SQLAlchemy's limit/offset capabilities.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-12",
+    "description": "Implemented API request logging middleware that captures request method, path, response status, latency, and tenant_id for every incoming request. Integrated with the existing structured JSON logging system for unified observability.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how request-level logging combined with structured JSON output enables powerful log querying and monitoring in production environments.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-13",
+    "description": "Performed integration testing of all API endpoints against a real PostgreSQL database with pgvector. Verified the full CRUD lifecycle for sources, the workflow trigger with both sync and async modes, and tenant isolation by testing cross-tenant data access prevention.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Discovered that the research listing endpoint was not properly filtering by tenant_id in one edge case. Fixed the SQLAlchemy query filter.",
+    "learnings": "I learned the importance of integration tests with a real database, as they reveal issues that mocked unit tests cannot catch, especially around query correctness.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "3",
+      "43",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-14",
+    "description": "Addressed code review feedback from the team. Refactored repetitive query patterns in the repository layer into shared helper methods, improved API schema field descriptions for better auto-generated documentation, and added missing input validation on the workflow endpoint.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I realized how code review feedback improves code quality significantly. Extracting common patterns into reusable helpers reduced duplication and made the codebase more maintainable.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "43",
+      "39"
+    ]
+  }
+]

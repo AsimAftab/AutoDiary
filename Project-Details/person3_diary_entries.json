@@ -1,0 +1,288 @@
+[
+  {
+    "date": "2026-01-22",
+    "description": "Initialized the React frontend project using Vite with the TypeScript template. Configured tsconfig.json for strict type checking, set up vite.config.ts with the dev server proxy to the backend API, and created the basic index.html shell.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to scaffold a React + TypeScript project with Vite and configure the dev server to proxy API requests to the backend.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "66",
+      "31",
+      "29"
+    ]
+  },
+  {
+    "date": "2026-01-23",
+    "description": "Defined all frontend TypeScript entity types in types.ts. Created interfaces for Source, RawPost, ProcessedTrend, GeneratedContent, AnalyticsEvent, ResearchJob, WorkflowResponse, and all API request/response shapes to ensure type safety across the application.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood the importance of defining a complete type system upfront, which prevents runtime errors and provides excellent IDE autocompletion during development.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "66",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-01-24",
+    "description": "Built the centralized HTTP client in api.ts. Created wrapper functions for all backend endpoints (fetchSources, createSource, fetchTrends, runResearch, generateContent, fetchAnalytics, runWorkflow) with automatic X-Tenant-ID header injection and error handling.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to build a typed API client layer that centralizes all HTTP communication, making it easy to maintain and update endpoint URLs.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "66",
+      "1"
+    ]
+  },
+  {
+    "date": "2026-01-26",
+    "description": "Created the main App.tsx component with a tab-based navigation system. Built six panels: Overview, Sources, Trends, Research, Generate, and Analytics. Implemented the navigation state management and basic layout structure.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to organize a React SPA into multiple panels with clean state management using React hooks for tab switching and data loading.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "31",
+      "66",
+      "93"
+    ]
+  },
+  {
+    "date": "2026-01-27",
+    "description": "Implemented the Sources panel (source creation form with name, type, and config fields; source listing with enable/disable status) and the Trends panel (trend cards displaying topic, summary, trend score with colored score breakdown bars, and mention counts).",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I practiced building interactive React forms with controlled inputs and displaying structured data with visual score indicators.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "31",
+      "66",
+      "30"
+    ]
+  },
+  {
+    "date": "2026-01-28",
+    "description": "Built the Research panel with a form to run web research (URL, goal, provider preference), display of research job history, and readable card formatting for research results including structured data, raw events, and status indicators.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Displaying deeply nested JSON research results in a user-friendly way was challenging. I ended up creating a recursive card renderer for the structured data.",
+    "learnings": "I learned how to present complex API response data in a readable card layout, making raw JSON accessible to non-technical users.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "31",
+      "66",
+      "93"
+    ]
+  },
+  {
+    "date": "2026-01-29",
+    "description": "Implemented the Generate panel (strategy and content generation with trend selection) and the Analytics panel (analytics event listing and creation form with event type, CTR, impressions, and engagement score fields).",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to chain UI interactions where generating content requires first selecting a trend, and how to display LLM-generated strategy JSON in a formatted view.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "31",
+      "66",
+      "16"
+    ]
+  },
+  {
+    "date": "2026-01-30",
+    "description": "Completed the full CSS styling in styles.css. Implemented a responsive design with a dark-themed color scheme, styled all panels with consistent card layouts, form inputs, buttons, navigation tabs, loading spinners, and error states.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I strengthened my CSS skills by building a cohesive design system from scratch with consistent spacing, colors, and responsive breakpoints for mobile and desktop.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "30",
+      "93",
+      "29"
+    ]
+  },
+  {
+    "date": "2026-01-31",
+    "description": "Created the Dockerfile for the backend. Used Python 3.11-slim as the base image, installed system dependencies, set up Playwright with Chromium browser installation for the crawler, copied application code, and configured the uvicorn entrypoint.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Installing Playwright browsers inside the Docker image required additional system dependencies (libnss3, libatk-bridge2.0) that took time to identify.",
+    "learnings": "I learned how to build production Docker images with Playwright browser dependencies, and the importance of using slim base images to minimize image size.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "65",
+      "3",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-02",
+    "description": "Built the docker-compose.yml orchestrating five services: frontend (node:20-alpine with Vite dev server on port 5173), api (custom Dockerfile with uvicorn on port 8000), worker (Celery with Redis broker), db (pgvector/pgvector:pg16 with persistent volume), and redis (redis:7-alpine).",
+    "hours": 8,
+    "links": "",
+    "blockers": "Getting the service dependency order correct (db and redis must be healthy before api and worker start) required using depends_on with health checks.",
+    "learnings": "I learned how to orchestrate a multi-service application with Docker Compose, including health checks, volume mounts, environment variables, and network configuration.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "65",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-03",
+    "description": "Configured the Celery worker setup. Created celery_app.py with Redis as both broker and backend, and implemented the async workflow task in tasks.py that dispatches the TrendReefWorkflow pipeline. Verified task dispatch and result retrieval through Redis.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how Celery works with Redis as a message broker, and how to define tasks that execute the LangGraph workflow asynchronously in a separate worker process.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "24",
+      "65"
+    ]
+  },
+  {
+    "date": "2026-02-04",
+    "description": "Set up the test infrastructure. Created conftest.py with shared pytest fixtures for async test sessions, mock database connections, and tenant context. Wrote the health API tests (test_health_api.py) verifying /health and /provider-health endpoints.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to configure pytest for async FastAPI testing using httpx.AsyncClient and how to create reusable fixtures for tenant-aware test scenarios.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-05",
+    "description": "Wrote the source API tests (test_sources_api.py) covering source creation and listing with tenant isolation. Also implemented circuit breaker unit tests (test_circuit_breaker.py) testing state transitions: closed -> open after threshold, and auto-reset after timeout.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I practiced writing focused unit tests that verify specific state transitions, and learned how to test async code with pytest-asyncio.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-06",
+    "description": "Implemented the intelligence agent unit tests (test_intelligence_agent.py) verifying trend scoring formula weights, and the model router tests (test_model_router.py) testing provider resolution with primary/secondary fallback. Also wrote TinyFish client tests (test_tinyfish_client.py) for SSE parsing safety.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to test complex business logic like scoring algorithms with edge cases, and how to mock SSE streams for testing streaming clients.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "3",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-07",
+    "description": "Wrote the technical documentation: ARCHITECTURE.md covering the full system design, component interactions, and data flow; and API_REFERENCE.md documenting all endpoint contracts with request/response examples.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood the importance of comprehensive technical documentation and learned to write API references that serve as both documentation and onboarding material.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "90",
+      "39"
+    ]
+  },
+  {
+    "date": "2026-02-09",
+    "description": "Continued documentation work. Wrote OPERATIONS.md (runbook with troubleshooting guides for common issues), FILE_GUIDE.md (file-by-file ownership map), and AGENT_ONBOARDING.md (coding-agent handoff guide with conventions and patterns).",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how operational runbooks help teams quickly diagnose and resolve production issues, and how file ownership maps improve code review efficiency.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "90",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-10",
+    "description": "Created three Mermaid diagrams: architecture.mmd (system architecture overview showing all services and their connections), research-sequence.mmd (research request lifecycle), and workflow-sequence.mmd (full workflow execution sequence from API call to content output).",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to create clear Mermaid sequence and architecture diagrams that communicate complex system interactions visually.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "44",
+      "90"
+    ]
+  },
+  {
+    "date": "2026-02-11",
+    "description": "Finalized all project configuration files: .env.example with all required environment variables documented, README.md with quick start instructions, pytest.ini for test configuration, and .gitignore for Python, Node, and Docker artifacts.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how well-structured configuration files and a clear README significantly improve the developer onboarding experience.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "63",
+      "24",
+      "65"
+    ]
+  },
+  {
+    "date": "2026-02-12",
+    "description": "Performed end-to-end integration testing of the full Docker Compose stack. Verified frontend-to-backend communication, Celery async workflow execution, database migrations, Redis connectivity, and the complete data flow from source ingestion to content generation.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The Celery worker was not picking up tasks initially because the broker URL in docker-compose was pointing to localhost instead of the redis service name. Fixed by updating to redis://redis:6379/1.",
+    "learnings": "I learned the importance of testing the full containerized stack together, as Docker networking issues between services can only be caught during integration testing.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "65",
+      "24",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-13",
+    "description": "Improved the frontend user experience by adding loading spinners during API calls, error boundary components for graceful failure handling, toast notifications for success/error feedback, and empty state placeholders for panels with no data.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how loading states and error boundaries significantly improve user experience, making the application feel polished and responsive even during slow API calls.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "31",
+      "66",
+      "93",
+      "30"
+    ]
+  },
+  {
+    "date": "2026-02-14",
+    "description": "Optimized the Docker setup for production readiness. Created a .dockerignore file to exclude unnecessary files from the build context, added multi-stage build optimization to the Dockerfile to reduce final image size, and verified the complete Docker Compose stack startup sequence with health check dependencies.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how multi-stage Docker builds and .dockerignore reduce image size and build time, and how proper health checks in Docker Compose ensure services start in the correct order.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "65",
+      "24",
+      "63"
+    ]
+  }
+]

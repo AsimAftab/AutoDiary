@@ -32,6 +32,7 @@ WEEKDAY_NAME_TO_INDEX = {
     "saturday": 5,
     "sunday": 6,
 }
+WEEKDAY_INDEX_TO_NAME = {index: name.capitalize() for name, index in WEEKDAY_NAME_TO_INDEX.items()}
 
 LOGGER = logging.getLogger("autodiary")
 app = typer.Typer(add_completion=False, help="VTU AutoDiary CLI")
@@ -63,6 +64,15 @@ def parse_date_value(raw: str) -> date:
     if value == "today":
         return date.today()
     return datetime.strptime(str(raw).strip(), "%Y-%m-%d").date()
+
+
+def format_weekday_indexes(indexes: Set[int]) -> List[str]:
+    return [WEEKDAY_INDEX_TO_NAME[idx] for idx in sorted(indexes)]
+
+
+def describe_date(date_str: str) -> str:
+    dt = datetime.strptime(date_str, "%Y-%m-%d")
+    return WEEKDAY_INDEX_TO_NAME[dt.weekday()]
 
 
 class AutoDiaryClient:
@@ -394,10 +404,11 @@ class AutoDiaryClient:
         show_access_token: bool,
         print_existing: bool,
         auto_dates: bool,
+        skip_existing: bool,
     ) -> None:
         has_missing_dates = any("date" not in e or not str(e.get("date", "")).strip() for e in self.entries)
         auto_dates_enabled = auto_dates or has_missing_dates
-        idempotency_enabled = True
+        idempotency_enabled = skip_existing
 
         needs_auth_call = login_only or print_existing or not dry_run or auto_dates_enabled or idempotency_enabled
         if self.auth_mode == "login" and needs_auth_call:
@@ -420,7 +431,12 @@ class AutoDiaryClient:
                     return
 
         holiday_weekdays, holiday_dates = self.build_holiday_filters()
-        LOGGER.info("Holiday weekdays=%s holiday_dates=%s", sorted(holiday_weekdays), sorted(holiday_dates))
+        LOGGER.info(
+            "Holiday weekdays=%s (%s) holiday_dates=%s",
+            sorted(holiday_weekdays),
+            format_weekday_indexes(holiday_weekdays),
+            sorted(holiday_dates),
+        )
         if auto_dates_enabled:
             working_dates = self.build_working_dates(holiday_weekdays, holiday_dates)
             LOGGER.info("Auto-date enabled. Candidate working dates available: %s", len(working_dates))
@@ -436,7 +452,12 @@ class AutoDiaryClient:
 
             if self.is_holiday(payload["date"], holiday_weekdays, holiday_dates):
                 skipped_count += 1
-                LOGGER.info("[SKIP] Entry #%s (%s): configured holiday", i, payload["date"])
+                LOGGER.info(
+                    "[SKIP] Entry #%s (%s): configured holiday (%s)",
+                    i,
+                    payload["date"],
+                    describe_date(payload["date"]),
+                )
                 continue
 
             if payload["date"] in existing_dates:
@@ -478,6 +499,7 @@ def root(
     show_access_token: bool = typer.Option(False, help="Print access_token from login cookie"),
     print_existing: bool = typer.Option(False, help="Legacy: same as existing"),
     auto_dates: bool = typer.Option(False, help="Legacy: same as run --auto-dates"),
+    skip_existing: bool = typer.Option(True, help="Skip dates that already exist on the server"),
 ) -> None:
     # Keep old command style working when no explicit subcommand is provided.
     if ctx.invoked_subcommand is not None:
@@ -489,6 +511,7 @@ def root(
         show_access_token=show_access_token,
         print_existing=print_existing,
         auto_dates=auto_dates,
+        skip_existing=skip_existing,
     )
 
 
@@ -500,6 +523,7 @@ def run_command(
     log_level: str = typer.Option("INFO", help="Logging level: DEBUG, INFO, WARNING, ERROR"),
     dry_run: bool = typer.Option(False, help="Validate and print without sending"),
     auto_dates: bool = typer.Option(False, help="Auto-assign missing dates"),
+    skip_existing: bool = typer.Option(True, help="Skip dates that already exist on the server"),
 ) -> None:
     client = _make_client(settings, entries, env_file, log_level)
     client.run(
@@ -508,6 +532,7 @@ def run_command(
         show_access_token=False,
         print_existing=False,
         auto_dates=auto_dates,
+        skip_existing=skip_existing,
     )
 
 
@@ -526,6 +551,7 @@ def login_command(
         show_access_token=show_access_token,
         print_existing=False,
         auto_dates=False,
+        skip_existing=True,
     )
 
 
@@ -543,6 +569,7 @@ def existing_command(
         show_access_token=False,
         print_existing=True,
         auto_dates=False,
+        skip_existing=True,
     )
 
 
@@ -563,6 +590,7 @@ def interactive_command(
             show_access_token=show_token,
             print_existing=False,
             auto_dates=False,
+            skip_existing=True,
         )
         return
     if mode == "existing":
@@ -572,6 +600,7 @@ def interactive_command(
             show_access_token=False,
             print_existing=True,
             auto_dates=False,
+            skip_existing=True,
         )
         return
     dry_run = typer.confirm("Dry run?", default=True)
@@ -582,6 +611,7 @@ def interactive_command(
         show_access_token=False,
         print_existing=False,
         auto_dates=auto_dates,
+        skip_existing=True,
     )
 
 

@@ -1,0 +1,154 @@
+[
+  {
+    "date": "2026-02-16",
+    "description": "Set up the n8n workflow automation environment for the Google Maps lead generation project. Studied n8n's node-based architecture, HTTP Request node configuration, and data flow between nodes. Created the initial workflow skeleton with the Settings node to centralize API keys, Google Sheets spreadsheet IDs, and search radius parameters.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how n8n workflows pass data between nodes using expressions and how the Set node can be used to centralize configuration values that are referenced throughout the workflow.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-17",
+    "description": "Implemented the Google Maps Places API integration using the HTTP Request node (GMaps API). Configured the request URL with dynamic query parameters built from subcategory names and zip codes using n8n expressions. Set up proper API key authentication and response parsing for the places search results.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Had to troubleshoot URL encoding issues with special characters in subcategory names when building the API query string dynamically.",
+    "learnings": "I understood how to configure n8n's HTTP Request node for REST API calls with dynamic query parameters using expression syntax like {{ $json.fieldName }}.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "14",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-18",
+    "description": "Built the Place Array code node that processes the raw Google Maps API response. The JavaScript code extracts place objects from the nested API response structure, normalizes fields (name, address, phone, rating, place_id, types), and outputs a flat array of place objects for downstream processing.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to write JavaScript inside n8n Code nodes to transform complex nested API responses into normalized flat data structures suitable for further workflow processing.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-02-19",
+    "description": "Implemented the Set Place ID node to extract and assign unique place identifiers from each Google Maps result. Also built the If Empty conditional node that checks whether the API returned any results, routing to the next subcategory loop iteration when empty or to the Place Array processing when results exist.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how n8n's If node enables conditional branching based on data presence, allowing the workflow to gracefully handle empty API responses without errors.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-20",
+    "description": "Built the Loop Subcats node using splitInBatches to iterate over business subcategories one at a time. Connected it to the inner Loop Zips node which iterates through zip codes for each subcategory. Configured the batch sizes and verified the nested loop data passing between outer and inner loops.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Getting the nested splitInBatches loops to correctly pass the current subcategory context into the inner zip code loop required careful expression referencing.",
+    "learnings": "I learned how to implement nested iteration in n8n using splitInBatches nodes, and how the outer loop context is accessible in inner loop nodes through expression references.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-21",
+    "description": "Implemented the Set Zip node that prepares the current zip code and subcategory combination before each Google Maps API call. Connected the full inner loop chain: Set Zip -> GMaps API -> If Empty -> Place Array -> Set Place ID. Tested the loop with a small set of 3 zip codes and 2 subcategories.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how the Set node acts as a data preparation step before API calls, combining values from different loop contexts into a single payload for the HTTP Request node.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "14"
+    ]
+  },
+  {
+    "date": "2026-02-23",
+    "description": "Integrated the Remove Duplicates node after Set Place ID to eliminate duplicate leads that appear across multiple zip code searches. Configured deduplication based on the place_id field. Also connected the output to the Add rows in Google Sheets node for persisting unique leads.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how n8n's Remove Duplicates node efficiently deduplicates records by a specific field, which is essential for lead generation where the same business can appear in overlapping geographic searches.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "44"
+    ]
+  },
+  {
+    "date": "2026-02-24",
+    "description": "Connected the complete core pipeline: Settings -> GS Get Zip Codes -> Zips -> Filter Zips -> Set Row Number -> Split Out -> Limit -> Loop Zips -> GS Get Subcategory -> Filter Subcategories -> Subcategory -> Loop Subcats. Verified data flows correctly through each node in the chain.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The Split Out node was producing unexpected output shape when the source data had nested arrays. Fixed by configuring the correct field path for splitting.",
+    "learnings": "I learned the importance of verifying data shapes at each node connection in n8n, as subtle differences in array nesting can cause downstream nodes to fail silently.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-25",
+    "description": "Performed integration testing of the core workflow with real Google Maps API calls. Tested with 5 subcategories across 10 zip codes, verifying that the nested loop correctly processes all combinations. Identified and fixed an issue where the Loop Subcats node was not resetting the inner loop state properly.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The inner Loop Zips was retaining state from the previous subcategory iteration, causing some zip codes to be skipped. Resolved by ensuring the loop resets on each outer iteration.",
+    "learnings": "I understood the importance of loop state management in n8n batch processing, and how nested loops require proper reset behavior to avoid data leakage between iterations.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34",
+      "14",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-26",
+    "description": "Optimized the Google Maps API call efficiency by implementing the Limit node to control batch sizes per loop iteration, preventing API quota exhaustion. Also fine-tuned the Settings node with configurable search radius and result limit parameters that can be adjusted without modifying the workflow logic.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how to design n8n workflows with configurable parameters that allow operators to tune behavior (batch size, search radius, result limits) without editing the workflow structure.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "14"
+    ]
+  },
+  {
+    "date": "2026-02-27",
+    "description": "Conducted final end-to-end testing of the complete workflow pipeline with all nodes connected. Ran the workflow with production-scale data (50 zip codes, 15 subcategories) and verified correct lead extraction, deduplication, and Google Sheets output. Documented the workflow configuration and usage instructions.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how all components of an n8n lead generation workflow connect together, and the importance of end-to-end testing with realistic data volumes to catch performance and rate-limiting issues.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "14",
+      "73"
+    ]
+  }
+]

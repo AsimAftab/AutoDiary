@@ -1,0 +1,153 @@
+[
+  {
+    "date": "2026-02-16",
+    "description": "Studied n8n error handling patterns and retry strategies for API-dependent workflows. Researched exponential backoff algorithms and designed the retry architecture for three critical failure points: Google Sheets writes, status updates, and status reads. Each circuit has its own backoff, wait, and max retry check.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how exponential backoff with jitter prevents thundering herd problems when multiple workflow executions retry failed API calls simultaneously.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-17",
+    "description": "Implemented the first Exponential Backoff code node for the Google Sheets write retry circuit. The JavaScript code calculates delay as Math.min(baseDelay * 2^retryCount, maxDelay) with random jitter, and increments the retry counter. This handles failures when the Add rows in Google Sheets node encounters rate limits.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how to implement exponential backoff in n8n Code nodes using JavaScript, including how to pass retry state between code and wait nodes using workflow item data.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-18",
+    "description": "Built the Wait node and Check Max Retries conditional node for the first retry circuit. The Wait node pauses execution for the calculated backoff duration, then Check Max Retries evaluates whether the retry count has exceeded the threshold (5 retries). On exceeding, it routes to Stop and Error; otherwise, retries the sheets write.",
+    "hours": 8,
+    "links": "",
+    "blockers": "The Wait node required careful configuration to accept dynamic wait times from the Exponential Backoff output rather than a fixed duration.",
+    "learnings": "I learned how n8n's Wait node can accept dynamic delay values from previous nodes, enabling variable-duration pauses based on computed backoff times.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-19",
+    "description": "Implemented the second retry circuit (Exponential Backoff1, Wait1, Check Max Retries1) for the Update Status to Success operation. This handles Google Sheets API failures when updating zip code status after successful lead extraction. Connected Stop and Error1 as the terminal failure node.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how replicating the retry pattern across multiple failure points ensures each critical operation has independent resilience, preventing one failure from cascading to unrelated operations.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-20",
+    "description": "Built the third retry circuit (Exponential Backoff2, Wait2, Check Max Retries2) for the GS - Get Status read operation. This handles failures when reading processing status from Google Sheets. Implemented Stop and Error2 with a descriptive error message identifying the specific operation that failed.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned the importance of descriptive error messages in Stop and Error nodes, as they help operators quickly identify which specific operation failed in a workflow with multiple retry circuits.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34"
+    ]
+  },
+  {
+    "date": "2026-02-21",
+    "description": "Connected all three retry circuits to their respective Google Sheets operations. Wired Add rows in Google Sheets error output to Exponential Backoff, Update Status to Success error output to Exponential Backoff1, and GS - Get Status error output to Exponential Backoff2. Verified error routing works correctly.",
+    "hours": 8,
+    "links": "",
+    "blockers": "n8n's error output connections required specific configuration in the node settings to enable error handling mode. This was not obvious from the documentation.",
+    "learnings": "I understood how n8n routes errors through dedicated error output connections, and how this pattern enables targeted retry logic for each operation instead of a single global error handler.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-23",
+    "description": "Configured the three workflow trigger mechanisms. Set up the Manual Trigger for on-demand execution, the Schedule Trigger for automated runs every 15 minutes (currently disabled), and the Execute Workflow Trigger for calling this workflow from other n8n workflows as a sub-workflow.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how n8n supports multiple trigger types on the same workflow, allowing it to be used both as a standalone scheduled job and as a reusable sub-workflow called by other automations.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-24",
+    "description": "Tested all three retry circuits individually by simulating Google Sheets API failures. Verified that each circuit correctly calculates exponential backoff delays (1s, 2s, 4s, 8s, 16s), waits the computed duration, retries the operation, and eventually triggers the Stop and Error node after exceeding max retries.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Simulating API failures in n8n required temporarily providing invalid credentials to the Google Sheets nodes. Had to be careful to restore correct credentials after testing.",
+    "learnings": "I understood the importance of testing error handling paths in isolation, as retry logic bugs only surface during actual failures and can cause infinite loops or premature termination if incorrect.",
+    "mood_slider": 4,
+    "skill_ids": [
+      "1",
+      "34",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-25",
+    "description": "Performed integration testing of the retry circuits with the main workflow pipeline. Verified that when a Google Sheets write fails mid-batch, the retry circuit recovers and the workflow continues processing remaining zip codes. Tested that the status update retry does not duplicate leads.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how retry circuits interact with the main loop flow in n8n, and the importance of ensuring that successful retries return control to the correct point in the loop without duplicating processed items.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "73"
+    ]
+  },
+  {
+    "date": "2026-02-26",
+    "description": "Added the Sticky Note nodes documenting key workflow sections: configuration instructions (Sticky Note), retry circuit explanations (Sticky Note1), data flow descriptions (Sticky Note2), API setup guide (Sticky Note8), and processing logic notes (Sticky Note15). These serve as in-workflow documentation for future maintainers.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I understood how Sticky Notes in n8n workflows serve as inline documentation, making complex workflows self-documenting and easier for team members to understand without external documentation.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "24"
+    ]
+  },
+  {
+    "date": "2026-02-27",
+    "description": "Conducted final end-to-end testing of the complete workflow including all retry circuits, trigger mechanisms, and error handling. Ran the workflow with 50 zip codes and 15 subcategories, verified correct lead generation, deduplication, Google Sheets output, and status tracking. Validated that the schedule trigger works correctly for automated execution.",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "I learned how comprehensive end-to-end testing of an n8n workflow should cover both the happy path and all error recovery paths to ensure the automation is reliable for unattended scheduled execution.",
+    "mood_slider": 5,
+    "skill_ids": [
+      "1",
+      "34",
+      "24",
+      "73"
+    ]
+  }
+]
