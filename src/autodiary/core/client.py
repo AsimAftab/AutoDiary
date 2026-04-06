@@ -103,8 +103,7 @@ class VTUApiClient:
                 # Retry on transient server errors and auth failures (401, 429, 5xx)
                 if response.status_code in (401, 429, 502, 503, 504):
                     LOGGER.warning(
-                        f"Login attempt {attempt} failed: "
-                        f"HTTP {response.status_code} | {data}"
+                        f"Login attempt {attempt} failed: HTTP {response.status_code} | {data}"
                     )
                     if attempt < self.max_login_attempts:
                         continue
@@ -233,9 +232,7 @@ class VTUApiClient:
         try:
             items = self._paginate_diary_list()
             dates = {
-                str(item["date"])
-                for item in items
-                if isinstance(item, dict) and item.get("date")
+                str(item["date"]) for item in items if isinstance(item, dict) and item.get("date")
             }
             LOGGER.info(f"Fetched {len(dates)} existing diary dates")
             return dates

@@ -100,7 +100,7 @@ class ConfigMenu:
         temp_config_path = Path(tempfile.gettempdir()) / "temp_vtu_config.json"
 
         for credential_attempt in range(1, max_credential_attempts + 1):
-            console.print(f"\n[bold cyan]Step 1 of 5: VTU Credentials[/bold cyan]")
+            console.print("\n[bold cyan]Step 1 of 5: VTU Credentials[/bold cyan]")
             if credential_attempt > 1:
                 console.print(
                     f"[yellow]Attempt {credential_attempt}/{max_credential_attempts}[/yellow]\n"
@@ -156,7 +156,9 @@ class ConfigMenu:
                             f"You have {max_credential_attempts - credential_attempt} attempt(s) remaining."
                         )
                         console.print()
-                        if not questionary.confirm("Try again with different credentials?", default=True).ask():
+                        if not questionary.confirm(
+                            "Try again with different credentials?", default=True
+                        ).ask():
                             print_warning("Setup cancelled by user")
                             return False
                         continue
@@ -169,7 +171,7 @@ class ConfigMenu:
                 # Fetch available internships
                 print_info("Fetching your internships...")
                 internships = self._fetch_user_internships(client)
-                
+
                 # Successfully logged in and fetched data, break the retry loop
                 break
 
@@ -201,33 +203,33 @@ class ConfigMenu:
 
         # Handle internship selection
         if not internships:
-                print_warning("No internships found. You'll need to enter details manually.")
+            print_warning("No internships found. You'll need to enter details manually.")
 
-                # Manual entry fallback
-                internship_id = questionary.text(
-                    "Internship ID:", validate=lambda x: validate_internship_id(x) or "Invalid ID"
-                ).ask()
+            # Manual entry fallback
+            internship_id = questionary.text(
+                "Internship ID:", validate=lambda x: validate_internship_id(x) or "Invalid ID"
+            ).ask()
 
-                if not internship_id:
-                    print_warning("Setup cancelled by user")
-                    return False
+            if not internship_id:
+                print_warning("Setup cancelled by user")
+                return False
 
-                title = questionary.text("Internship title (optional):").ask() or ""
-                company = questionary.text("Company name (optional):").ask() or ""
+            title = questionary.text("Internship title (optional):").ask() or ""
+            company = questionary.text("Company name (optional):").ask() or ""
 
-                start_date = questionary.text(
-                    "Internship start date (YYYY-MM-DD):",
-                    default=str(date.today()),
-                    validate=lambda x: validate_date_format(x) or "Invalid date format",
-                ).ask()
+            start_date = questionary.text(
+                "Internship start date (YYYY-MM-DD):",
+                default=str(date.today()),
+                validate=lambda x: validate_date_format(x) or "Invalid date format",
+            ).ask()
 
-                end_date = questionary.text(
-                    "Internship end date (YYYY-MM-DD or 'today'):",
-                    default="today",
-                    validate=lambda x: (
-                        x.lower() == "today" or validate_date_format(x) or "Invalid date format"
-                    ),
-                ).ask()
+            end_date = questionary.text(
+                "Internship end date (YYYY-MM-DD or 'today'):",
+                default="today",
+                validate=lambda x: (
+                    x.lower() == "today" or validate_date_format(x) or "Invalid date format"
+                ),
+            ).ask()
 
         else:
             console.print("\n[bold]Your Available Internships:[/bold]\n")
@@ -305,9 +307,7 @@ class ConfigMenu:
                         "Internship end date (YYYY-MM-DD or 'today'):",
                         default="today",
                         validate=lambda x: (
-                            x.lower() == "today"
-                            or validate_date_format(x)
-                            or "Invalid date format"
+                            x.lower() == "today" or validate_date_format(x) or "Invalid date format"
                         ),
                     ).ask()
 

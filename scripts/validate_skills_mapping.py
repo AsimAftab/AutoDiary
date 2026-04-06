@@ -22,9 +22,7 @@ def find_duplicates(values: list[Any], label: str) -> list[str]:
     return [f"Duplicate {label}: {value!r}" for value in duplicates]
 
 
-def find_missing_matches(
-    skills: list[dict[str, Any]], name_to_id: dict[str, Any]
-) -> list[str]:
+def find_missing_matches(skills: list[dict[str, Any]], name_to_id: dict[str, Any]) -> list[str]:
     issues: list[str] = []
 
     for skill in skills:
