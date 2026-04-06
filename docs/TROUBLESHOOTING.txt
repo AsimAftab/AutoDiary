@@ -1,0 +1,160 @@
+TROUBLESHOOTING GUIDE
+====================
+
+LOGIN ISSUES
+------------
+Problem: "Login failed"
+Solutions:
+  • Verify your email and password are correct
+  • Check that VTU portal is accessible (try in browser)
+  • Go to Configuration → Test Connection
+  • Update credentials in Configuration → Edit Credentials
+
+Problem: "Session expired"
+Solution:
+  • The app will automatically re-login
+  • If it persists, try Configuration → Test Connection
+
+
+UPLOAD ISSUES
+-------------
+Problem: "Upload failed for some entries"
+Solutions:
+  • Check your internet connection
+  • Verify entries have valid dates (YYYY-MM-DD format)
+  • Try "Dry Run" first to validate entries
+  • Check if date is a holiday (weekends are auto-skipped)
+  • If the API appears to throttle requests, increase Min/Max request delay in Configuration → Advanced Settings
+
+Problem: "Holiday detected"
+Solutions:
+  • Entries on holidays are automatically skipped
+  • Update holiday settings in Configuration
+  • Add/remove holidays as needed
+
+Problem: "No more available dates"
+Solutions:
+  • Your internship date range is exhausted
+  • Update internship end date in Configuration
+  • Remove some entries or upload manually
+
+Problem: "Missing required fields"
+Solutions:
+  • Ensure all entries have: description, hours, learnings, mood_slider, skill_ids
+  • Check JSON format is valid
+  • Use example in QUICKSTART.txt as reference
+
+
+CONFIGURATION ISSUES
+--------------------
+Problem: "Configuration file corrupted"
+Solutions:
+  1. Go to Configuration → Reset to Defaults
+  2. Confirm the reset
+  3. Run setup wizard again
+  4. Re-enter your details
+
+Problem: "Wrong internship dates"
+Solutions:
+  • Go to Configuration → Edit Internship Settings
+  • Update start and end dates
+  • Use YYYY-MM-DD format
+
+Problem: "Forgot password"
+Solutions:
+  • Go to Configuration → Edit Credentials
+  • Enter new password
+  • Test connection to verify
+
+
+PERFORMANCE ISSUES
+------------------
+Problem: "Application is slow"
+Solutions:
+  • Check your internet speed
+  • Try reducing "request delay" in Advanced Settings if the API is responsive:
+    - Configuration → Advanced Settings
+    - Reduce Min/Max request delay (default: 0.8-1.5s)
+  • If uploads fail or the API appears to throttle requests, increase the delay instead of lowering it
+
+Problem: "Application freezes"
+Solutions:
+  • Close and restart the application
+  • Check if VTU portal is responding
+  • Try reducing timeout in Advanced Settings
+
+Problem: "Upload takes too long"
+Solutions:
+  • Reduce request delays in Advanced Settings
+  • Check your internet connection
+  • Consider uploading fewer entries at once
+
+
+ENTRY FORMAT ISSUES
+-------------------
+Problem: "Invalid JSON format"
+Solutions:
+  • Use a JSON validator to check your file
+  • Ensure proper commas and quotes
+  • Check for trailing commas
+  • Use the example format in QUICKSTART.txt
+
+Problem: "Invalid date format"
+Solutions:
+  • Use YYYY-MM-DD format (e.g., 2026-01-15)
+  • Don't use DD/MM/YYYY or MM-DD-YYYY
+  • Ensure dates are within your internship period
+
+Problem: "Skill IDs not working"
+Solutions:
+  • Skill IDs must be strings, not numbers
+  • Use format: ["44", "16", "20"] not [44, 16, 20]
+  • Check VTU portal for valid skill IDs
+
+
+GENERAL ISSUES
+---------------
+Problem: "Application won't start"
+Solutions:
+  • Ensure you're using Windows 10 or later
+  • Try running as administrator
+  • Check if antivirus is blocking the executable
+  • Download a fresh copy from GitHub
+
+Problem: "Can't find configuration file"
+Solutions:
+  • Run setup wizard from Configuration menu
+  • Check if .autodiary directory exists in your user folder
+  • Reset to defaults and reconfigure
+
+Problem: "Changes not saving"
+Solutions:
+  • Check file permissions
+  • Ensure you have write access to user folder
+  • Try running as administrator
+  • Reset configuration and start fresh
+
+
+STILL NEED HELP?
+----------------
+• Check the main Help menu in the application
+• Read the full README.md
+• Visit our GitHub repository
+• Open an issue on GitHub with:
+  - Error message
+  - Steps to reproduce
+  - Your operating system
+  - Application version
+
+
+GETTING SUPPORT
+---------------
+GitHub: https://github.com/AsimAftab/AutoDiary
+Issues: https://github.com/AsimAftab/AutoDiary/issues
+
+When reporting issues, please include:
+  • What you were trying to do
+  • What happened (error messages)
+  • What you expected to happen
+  • Your operating system and version
+  • Application version (from Help → About)

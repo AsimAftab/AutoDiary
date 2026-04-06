@@ -1,0 +1,32 @@
+[
+  {
+    "description": "On the first day of my internship, I set up my development environment and met with my mentor.",
+    "hours": 8,
+    "links": "https://github.com/username/repository",
+    "blockers": "",
+    "learnings": "I learned about the company's development workflow and coding standards.",
+    "mood_slider": 5,
+    "skill_ids": ["3", "44", "16"],
+    "date": ""
+  },
+  {
+    "description": "Worked on understanding the existing codebase and architecture documentation.",
+    "hours": 8,
+    "links": "",
+    "blockers": "Some documentation was outdated",
+    "learnings": "Improved my understanding of microservices architecture and API design patterns.",
+    "mood_slider": 4,
+    "skill_ids": ["44", "16"],
+    "date": ""
+  },
+  {
+    "description": "Started implementing user authentication module using best security practices.",
+    "hours": 8,
+    "links": "https://owasp.org/www-project-top-ten/",
+    "blockers": "",
+    "learnings": "Deepened my knowledge of JWT tokens, OAuth flows, and secure session management.",
+    "mood_slider": 5,
+    "skill_ids": ["19", "20"],
+    "date": ""
+  }
+]

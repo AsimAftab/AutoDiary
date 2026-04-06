@@ -1,18 +1,144 @@
+# ==============================================================================
+# AutoDiary - .gitignore
+# ==============================================================================
+
+# -----------------------------------------------------------------------------
+# User Configuration & Secrets
+# -----------------------------------------------------------------------------
 config/settings.json
 entries/diary_entries.json
+previous_entries/*.json
+skills/*.json
+.encryption_key
 .env
+.env.local
+*.key
+
+# Backup files
+*.bak
+*~
+config/*.bak
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+# Virtual environments
 .venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled / optimized
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
 dist/
 build/
+*.egg
 *.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# PyInstaller
+*.spec.lock
+
+# -----------------------------------------------------------------------------
+# Testing & Coverage
+# -----------------------------------------------------------------------------
+.pytest_cache/
+pytest_temp/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+.tox/
+.nox/
+
+# Test output
+pytest_output.log
+test-results/
+
+# -----------------------------------------------------------------------------
+# Linting & Type Checking
+# -----------------------------------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+.pyre/
+
+# -----------------------------------------------------------------------------
+# Build Artifacts
+# -----------------------------------------------------------------------------
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+
+# PyInstaller output
+dist/*.exe
+build/**
+
+# -----------------------------------------------------------------------------
+# IDE & Editor
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+.vs/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.python-version
+
+# AI Agent workspaces
+.claude/
+.gemini/
+.copilot/
+
+# -----------------------------------------------------------------------------
+# OS-specific
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# -----------------------------------------------------------------------------
+# Logs & Temporary Files
+# -----------------------------------------------------------------------------
+*.log
+logs/
+temp/
+tmp/
+
+# Never ignore example/fixture logs
+!docs/*.log
+!tests/fixtures/*.log
+
+# -----------------------------------------------------------------------------
+# Documentation (Generated)
+# -----------------------------------------------------------------------------
+docs/_build/
 docs/CONFIG_AND_RUN.md
+
+# -----------------------------------------------------------------------------
+# Lock files (keep uv.lock for reproducibility)
+# -----------------------------------------------------------------------------
+# We keep uv.lock but ignore other lock files
+poetry.lock
+Pipfile.lock

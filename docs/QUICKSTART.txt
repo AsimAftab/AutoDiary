@@ -1,0 +1,80 @@
+VTU AUTO DIARY FILLER - QUICK START
+====================================
+
+STEP 1: Run the Application
+---------------------------
+Windows:
+  Double-click AutoDiary.exe
+
+Linux/Mac:
+  ./AutoDiary
+
+Or from source:
+  python -m autodiary
+
+
+STEP 2: First-Time Setup
+-------------------------
+You'll see a welcome message and setup wizard.
+
+Enter:
+  • Your VTU email address
+  • Your VTU password
+  • Your internship ID
+  • Internship start date (YYYY-MM-DD)
+  • Select weekend days (e.g., Sunday)
+
+Your password will be encrypted and stored locally.
+
+
+STEP 3: Upload Diaries
+-----------------------
+1. Choose "Upload Diaries" from main menu
+2. Select "Upload with auto-dates"
+3. Choose your entries file (default: entries/diary_entries.json)
+4. Review the summary
+5. Confirm upload
+
+That's it! Your diaries will be uploaded automatically.
+
+
+COMMON ENTRY FILE FORMAT
+-------------------------
+Create a file named "diary_entries.json" with:
+
+[
+  {
+    "description": "What you worked on",
+    "hours": 8,
+    "links": "",
+    "blockers": "",
+    "learnings": "Key learnings from the day",
+    "mood_slider": 5,
+    "skill_ids": ["44", "16", "20"]
+  }
+]
+
+Required fields:
+  - description: What you did
+  - hours: Hours worked (1-24)
+  - learnings: What you learned
+  - mood_slider: 1-5 (1=bad, 5=great)
+  - skill_ids: Array of skill IDs
+
+
+TIPS
+----
+• Use "Dry Run" to validate entries before uploading
+• Enable "Auto Skip Existing" to avoid duplicates
+• Configure holidays to skip weekends automatically
+• Use "View Entries" to see what's already uploaded
+• Adjust timeout, retry count, and request delay in Configuration → Advanced Settings
+• If the VTU API starts throttling or rejecting uploads, increase the request delay range above the default 0.8-1.5 seconds
+
+
+NEED HELP?
+----------
+• Choose "Help" from the main menu
+• Check README.md for detailed guide
+• Read TROUBLESHOOTING.txt for common issues
+• Visit our GitHub repository

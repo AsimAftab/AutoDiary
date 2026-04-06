@@ -1,0 +1,33 @@
+name: Build and Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies with uv
+      run: |
+        pip install uv
+        uv sync --frozen
+        
+
+    - name: Build executable
+      run: |
+        uv run pyinstaller --clean autodiary.spec
+        
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/AutoDiary.exe
