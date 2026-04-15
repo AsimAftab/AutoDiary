@@ -64,6 +64,30 @@ def test_config_manager_password(tmp_path):
     assert decrypted == "my-password"
 
 
+def test_config_manager_clear_credentials(tmp_path):
+    config_path = tmp_path / "config.json"
+    manager = ConfigManager(config_path)
+    config = manager.load_or_create_default()
+    config.email = "test@example.com"
+    config.internship_id = 123
+    config.internship_title = "Data Analyst Internship"
+    manager.save(config)
+    manager.set_password("my-password")
+    manager.save(manager.config)
+
+    updated = manager.clear_credentials()
+
+    assert updated.email == ""
+    assert updated.password_encrypted == ""
+    assert updated.internship_id == 123
+    assert updated.internship_title == "Data Analyst Internship"
+
+    reloaded = ConfigManager(config_path).load()
+    assert reloaded.email == ""
+    assert reloaded.password_encrypted == ""
+    assert reloaded.internship_id == 123
+
+
 def test_config_manager_is_configured(tmp_path):
     config_path = tmp_path / "config.json"
     manager = ConfigManager(config_path)

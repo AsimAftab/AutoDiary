@@ -2,7 +2,29 @@
 Configuration model and validation.
 """
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+def _normalize_date_value(value: str, *, allow_today: bool = False) -> str:
+    """Normalize supported date inputs to YYYY-MM-DD."""
+    if not value:
+        return value
+
+    value = value.strip()
+    if allow_today and value.lower() == "today":
+        return "today"
+
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        pass
+
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+    except ValueError:
+        return value
 
 
 class AppConfig(BaseModel):
@@ -74,8 +96,6 @@ class AppConfig(BaseModel):
     @classmethod
     def validate_holiday_dates(cls, v: list[str]) -> list[str]:
         """Validate holiday date format."""
-        from datetime import datetime
-
         result = []
         for date_str in v:
             try:
@@ -84,6 +104,18 @@ class AppConfig(BaseModel):
             except ValueError:
                 raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD") from None
         return result
+
+    @field_validator("internship_start_date", mode="before")
+    @classmethod
+    def normalize_internship_start_date(cls, v: str) -> str:
+        """Accept API datetime strings but store only the calendar date."""
+        return _normalize_date_value(v)
+
+    @field_validator("internship_end_date", mode="before")
+    @classmethod
+    def normalize_internship_end_date(cls, v: str) -> str:
+        """Accept API datetime strings but store only the calendar date."""
+        return _normalize_date_value(v, allow_today=True)
 
     @model_validator(mode="after")
     def validate_delays(self) -> "AppConfig":
@@ -95,8 +127,6 @@ class AppConfig(BaseModel):
     @model_validator(mode="after")
     def validate_internship_dates(self) -> "AppConfig":
         """Validate internship start and end dates."""
-        from datetime import datetime
-
         if not self.internship_start_date:
             return self
 

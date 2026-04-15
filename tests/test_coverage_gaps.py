@@ -110,6 +110,40 @@ class TestT1MainMenuIntegration:
             menu.show()
             mock_config_show.assert_called_once()
 
+    def test_auth_menu_dispatches_logout(self, mock_config_manager):
+        """Auth menu should dispatch to logout credential clearing."""
+        from autodiary.cli.main_menu import MainMenu
+
+        menu = MainMenu(mock_config_manager)
+
+        with (
+            patch("autodiary.cli.main_menu.questionary") as mock_q,
+            patch.object(menu, "_logout_clear_credentials", return_value=True) as mock_logout,
+        ):
+            mock_q.select.return_value.ask.return_value = "logout"
+            menu._handle_auth_menu()
+            mock_logout.assert_called_once()
+
+    def test_logout_clear_credentials_preserves_internship(self, mock_config_manager):
+        """Logout should clear credentials without wiping internship settings."""
+        from autodiary.cli.main_menu import MainMenu
+
+        mock_config_manager.config.internship_title = "Data Analyst Internship"
+        mock_config_manager.save(mock_config_manager.config)
+        menu = MainMenu(mock_config_manager)
+
+        with patch("autodiary.cli.main_menu.questionary") as mock_q:
+            mock_q.confirm.return_value.ask.return_value = True
+            mock_q.press_any_key_to_continue.return_value.ask.return_value = None
+
+            result = menu._logout_clear_credentials()
+
+        assert result is True
+        assert mock_config_manager.config.email == ""
+        assert mock_config_manager.config.password_encrypted == ""
+        assert mock_config_manager.config.internship_id == 123
+        assert mock_config_manager.config.internship_title == "Data Analyst Internship"
+
 
 class TestT1UploadMenuIntegration:
     def test_upload_menu_back(self):
@@ -207,6 +241,42 @@ class TestT1ConfigMenuIntegration:
             mock_q.select.return_value.ask.side_effect = ["test", "back"]
             menu.show()
             mock_test.assert_called_once()
+
+    def test_terms_acceptance_decline(self, mock_config_manager):
+        """Terms acknowledgement should return False when declined."""
+        from autodiary.cli.config_menu import ConfigMenu
+
+        menu = ConfigMenu(mock_config_manager)
+
+        with patch("autodiary.cli.config_menu.questionary") as mock_q:
+            mock_q.confirm.return_value.ask.return_value = False
+            assert menu._accept_terms_and_conditions() is False
+
+    def test_terms_acceptance_accept(self, mock_config_manager):
+        """Terms acknowledgement should return True when accepted."""
+        from autodiary.cli.config_menu import ConfigMenu
+
+        menu = ConfigMenu(mock_config_manager)
+
+        with patch("autodiary.cli.config_menu.questionary") as mock_q:
+            mock_q.confirm.return_value.ask.return_value = True
+            assert menu._accept_terms_and_conditions() is True
+
+    def test_setup_wizard_stops_when_terms_declined(self, mock_config_manager):
+        """Setup wizard should not collect credentials when terms are declined."""
+        from autodiary.cli.config_menu import ConfigMenu
+
+        menu = ConfigMenu(mock_config_manager)
+
+        with (
+            patch("autodiary.cli.config_menu.questionary") as mock_q,
+            patch.object(menu, "_accept_terms_and_conditions", return_value=False),
+        ):
+            mock_q.confirm.return_value.ask.return_value = True
+
+            assert menu.run_setup_wizard() is False
+            mock_q.text.assert_not_called()
+            mock_q.password.assert_not_called()
 
 
 # ── T2: Upload Error-Path Tests ──────────────────────────────────────────────
@@ -572,6 +642,40 @@ class TestT5Statistics:
         assert stats["skill_counts"]["3"] == 2
         assert stats["skill_counts"]["44"] == 2
         assert stats["skill_counts"]["16"] == 1
+
+    def test_skill_counts_infers_from_text_when_ids_missing(self, view_menu):
+        """Should infer likely skills when downloaded server entries omit skill_ids."""
+        entries = [
+            {
+                "description": "Built a FastAPI backend with Docker and database migrations.",
+                "learnings": "Improved Python API design and container debugging.",
+            },
+            {
+                "description": "Created dashboards and SQL queries for analysis.",
+                "learnings": "Learned data visualization with database-backed reporting.",
+            },
+        ]
+        stats = view_menu._calculate_statistics(entries)
+
+        assert stats["skill_counts"]["Python"] == 1
+        assert stats["skill_counts"]["Backend"] == 1
+        assert stats["skill_counts"]["Docker"] == 1
+        assert stats["skill_counts"]["Database design"] == 2
+        assert stats["skill_counts"]["Data visualization"] == 1
+        assert stats["skill_counts"]["SQL"] == 1
+        assert stats["skills_inferred"] is True
+
+    def test_skill_counts_reads_api_skill_objects(self, view_menu):
+        """Should read common API relationship objects for skills."""
+        entries = [
+            {"skills": [{"id": 3, "name": "Python"}, {"skill_id": 20}]},
+            {"diary_skills": [{"skill_name": "SQL"}]},
+        ]
+        stats = view_menu._calculate_statistics(entries)
+
+        assert stats["skill_counts"]["Python"] == 1
+        assert stats["skill_counts"]["20"] == 1
+        assert stats["skill_counts"]["SQL"] == 1
 
     def test_empty_entries(self, view_menu):
         """Should handle empty entries list gracefully."""

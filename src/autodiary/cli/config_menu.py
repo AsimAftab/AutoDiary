@@ -5,7 +5,7 @@ Configuration Menu - Handle application configuration and setup wizard.
 import json
 import logging
 import tempfile
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import questionary
@@ -24,6 +24,24 @@ from autodiary.utils.validators import (
 
 console = Console()
 LOGGER = logging.getLogger("autodiary")
+
+
+def _normalize_api_date(date_value: str | None) -> str:
+    """Convert VTU API date/datetime values to YYYY-MM-DD for local config."""
+    if not date_value:
+        return ""
+
+    date_value = date_value.strip()
+    try:
+        return datetime.strptime(date_value, "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        pass
+
+    try:
+        return datetime.fromisoformat(date_value.replace("Z", "+00:00")).date().isoformat()
+    except ValueError:
+        LOGGER.debug("Could not normalize API date value: %s", date_value)
+        return ""
 
 
 class ConfigMenu:
@@ -95,6 +113,9 @@ class ConfigMenu:
         console.print()
 
         if not questionary.confirm("Ready to begin?", default=True).ask():
+            return False
+
+        if not self._accept_terms_and_conditions():
             return False
 
         # Step 1: Credentials (with retry loop)
@@ -615,8 +636,8 @@ class ConfigMenu:
                 "id": internship_id,
                 "title": internship_details.get("name", "Unknown Internship"),
                 "company": internship_details.get("company", "Unknown Company"),
-                "start_date": intern.get("created_at", ""),  # Use application date as start date
-                "end_date": None,  # VTU API doesn't seem to provide end date
+                "start_date": _normalize_api_date(intern.get("created_at")),
+                "end_date": _normalize_api_date(intern.get("end_date")) or None,
                 "is_active": intern.get("status") == 6,  # Status 6 appears to be "ongoing"
                 "stipend": internship_details.get("internship_stipend"),
                 "internship_type": internship_details.get("internship_type"),
@@ -1025,3 +1046,26 @@ class ConfigMenu:
 
         except Exception as e:
             print_error(f"Failed to reset configuration: {e}")
+
+    def _accept_terms_and_conditions(self) -> bool:
+        """Show setup terms and require acknowledgement before collecting credentials."""
+        console.print()
+        print_header("Terms and Responsible Use")
+        console.print(
+            "\n[bold]Please read before continuing:[/bold]\n"
+            "  • AutoDiary is provided for educational and personal productivity purposes.\n"
+            "  • You are responsible for using it only with your own VTU account and data.\n"
+            "  • Do not use it for abuse, disruption, unauthorized access, or harm to any system.\n"
+            "  • The developers provide this tool in good faith and are not responsible for misuse.\n"
+            "  • You should follow your institution's rules and the VTU portal's terms.\n"
+        )
+
+        accepted = questionary.confirm(
+            "I understand and agree to use AutoDiary responsibly.", default=False
+        ).ask()
+
+        if not accepted:
+            print_warning("Setup cannot continue unless the terms are accepted.")
+            return False
+
+        return True

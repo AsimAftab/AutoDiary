@@ -3,6 +3,7 @@ name: Build and Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,18 +20,45 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
     - name: Install dependencies with uv
       run: |
-        pip install uv
         uv sync --frozen
-        
+
+    - name: Check code formatting & linting
+      run: |
+        uv run ruff format --check .
+        uv run ruff check .
+
+    - name: Run test suite
+      run: |
+        uv run pytest
 
     - name: Build executable
       run: |
         uv run pyinstaller --clean autodiary.spec
-        
+
+    - name: Verify executable was built
+      shell: pwsh
+      run: |
+        if (-not (Test-Path dist/AutoDiary.exe)) {
+          throw "dist/AutoDiary.exe was not created"
+        }
+
     - name: Upload Release Asset
+      if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
         files: dist/AutoDiary.exe
+
+    - name: Upload executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AutoDiary-windows
+        path: dist/AutoDiary.exe
+        if-no-files-found: error

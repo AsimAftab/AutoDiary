@@ -158,6 +158,7 @@ class MainMenu:
                     {"name": "Test Login", "value": "test"},
                     {"name": "Get Access Token", "value": "token"},
                     {"name": "View Session Info", "value": "session"},
+                    {"name": "Logout / Clear Saved Credentials", "value": "logout"},
                     {"name": "← Back to Main Menu", "value": "back"},
                 ],
                 use_indicator=True,
@@ -172,6 +173,9 @@ class MainMenu:
                 self._show_access_token()
             elif choice == "session":
                 self._show_session_info()
+            elif choice == "logout":
+                if self._logout_clear_credentials():
+                    break
 
     def _test_login(self) -> None:
         """Test login credentials."""
@@ -245,6 +249,29 @@ class MainMenu:
 
         console.print()
         questionary.press_any_key_to_continue().ask()
+
+    def _logout_clear_credentials(self) -> bool:
+        """Clear saved credentials from local configuration."""
+        console.print()
+        print_warning("This will remove the saved email and encrypted password.")
+        print_info("Internship settings, holidays, entries, and downloads will be kept.")
+
+        if not questionary.confirm("Log out and clear saved credentials?", default=False).ask():
+            print_warning("Logout cancelled")
+            console.print()
+            return False
+
+        try:
+            self.config_manager.clear_credentials()
+            print_success("Saved credentials cleared. Please run setup before uploading again.")
+            console.print()
+            questionary.press_any_key_to_continue().ask()
+            return True
+        except Exception as e:
+            print_error(f"Failed to clear credentials: {e}")
+            console.print()
+            questionary.press_any_key_to_continue().ask()
+            return False
 
     def _show_session_info(self) -> None:
         """Show session information."""

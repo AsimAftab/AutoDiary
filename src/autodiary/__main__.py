@@ -17,8 +17,38 @@ from autodiary.utils.validators import validate_first_run
 console = Console()
 
 
+def _configure_logging(config_dir: Path) -> list[Path]:
+    """Configure diagnostics logging and return the paths that were enabled."""
+    log_paths = [config_dir / "autodiary.log"]
+
+    if getattr(sys, "frozen", False):
+        exe_log_path = Path(sys.executable).resolve().parent / "autodiary.log"
+        if exe_log_path not in log_paths:
+            log_paths.append(exe_log_path)
+
+    handlers: list[logging.Handler] = []
+    active_paths: list[Path] = []
+    log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+    for log_path in log_paths:
+        try:
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            handler = logging.FileHandler(log_path, mode="a", encoding="utf-8")
+            handler.setFormatter(log_format)
+            handlers.append(handler)
+            active_paths.append(log_path)
+        except OSError:
+            continue
+
+    logging.basicConfig(level=logging.INFO, handlers=handlers, force=True)
+    logging.info("--- AutoDiary Bootstrapped ---")
+    logging.info("Diagnostics log path(s): %s", ", ".join(str(path) for path in active_paths))
+    return active_paths
+
+
 def main():
     """Main entry point for the application."""
+    log_paths: list[Path] = []
     try:
         # Initialize directories and configuration
         config_dir = Path.home() / ".autodiary"
@@ -26,14 +56,7 @@ def main():
         config_path = config_dir / "config.json"
 
         # Configure local file logging for diagnostics
-        log_path = config_dir / "autodiary.log"
-        logging.basicConfig(
-            filename=log_path,
-            level=logging.INFO,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            filemode="a",
-        )
-        logging.info("--- AutoDiary Bootstrapped ---")
+        log_paths = _configure_logging(config_dir)
 
         config_manager = ConfigManager(config_path)
 
@@ -60,8 +83,9 @@ def main():
         sys.exit(0)
     except Exception as e:
         logging.exception(f"Fatal application crash captured: {e}")
+        log_help = ", ".join(str(path) for path in log_paths) or "~/.autodiary/autodiary.log"
         console.print(
-            f"\n\n[red]An unexpected error occurred. See `~/.autodiary/autodiary.log` for full traceback: {e}[/red]"
+            f"\n\n[red]An unexpected error occurred. See `{log_help}` for full traceback: {e}[/red]"
         )
         sys.exit(1)
 

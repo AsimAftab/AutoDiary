@@ -165,6 +165,7 @@ class TestB3FetchUserInternships:
                     {
                         "internship_id": 42,
                         "status": 6,
+                        "created_at": "2026-01-08T06:19:27.000000Z",
                         "internship_details": {"name": "Test", "company": "Corp"},
                     }
                 ]
@@ -175,6 +176,7 @@ class TestB3FetchUserInternships:
         assert len(result) == 1
         assert result[0]["id"] == 42
         assert result[0]["title"] == "Test"
+        assert result[0]["start_date"] == "2026-01-08"
 
 
 # ── B4: Early date range validation ──────────────────────────────────────────

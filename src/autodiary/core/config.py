@@ -4,6 +4,7 @@ Handles loading, saving, and validating application configuration.
 """
 
 import json
+import logging
 import os
 import tempfile
 from datetime import date, datetime
@@ -12,6 +13,8 @@ from typing import Any
 
 from autodiary.models.config import AppConfig
 from autodiary.utils.crypto import CryptoManager
+
+LOGGER = logging.getLogger("autodiary")
 
 
 class ConfigManager:
@@ -167,6 +170,19 @@ class ConfigManager:
         """
         self.config.password_encrypted = self.crypto.encrypt(password)
 
+    def clear_credentials(self) -> AppConfig:
+        """
+        Clear saved login credentials while preserving other configuration.
+
+        Returns:
+            Updated configuration
+        """
+        config = self.config
+        config.email = ""
+        config.password_encrypted = ""
+        self.save(config)
+        return config
+
     def get_api_config(self) -> dict[str, Any]:
         """
         Get API configuration for client.
@@ -303,7 +319,8 @@ class ConfigManager:
                 and self._config.internship_id > 0
                 and self._config.internship_start_date
             )
-        except (FileNotFoundError, ValueError):
+        except (FileNotFoundError, ValueError) as e:
+            LOGGER.warning("Configuration is missing or invalid: %s", e)
             return False
 
     @property

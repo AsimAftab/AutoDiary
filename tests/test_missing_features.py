@@ -189,6 +189,18 @@ class TestF3DateValidation:
         )
         assert config.internship_start_date == "2026-01-01"
 
+    def test_api_datetime_dates_are_normalized(self):
+        """Should accept API datetime values and store date-only strings."""
+        config = AppConfig(
+            email="test@example.com",
+            password_encrypted="x",
+            internship_id=1,
+            internship_start_date="2026-01-08T06:19:27.000000Z",
+            internship_end_date="2026-06-30T23:59:59+00:00",
+        )
+        assert config.internship_start_date == "2026-01-08"
+        assert config.internship_end_date == "2026-06-30"
+
 
 # ── F4: API response schema validation ──────────────────────────────────────
 
