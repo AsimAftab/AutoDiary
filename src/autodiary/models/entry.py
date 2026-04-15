@@ -35,8 +35,10 @@ class DiaryEntry(BaseModel):
     @classmethod
     def validate_skill_ids(cls, v: list[str]) -> list[str]:
         """Validate skill IDs are non-empty strings."""
-        stripped = [sid.strip() if isinstance(sid, str) else sid for sid in v]
-        if not all(isinstance(sid, str) and sid for sid in stripped):
+        if not all(isinstance(sid, str) for sid in v):
+            raise ValueError("All skill IDs must be strings")
+        stripped = [sid.strip() for sid in v]
+        if not all(stripped):
             raise ValueError("All skill IDs must be non-empty strings")
         return stripped
 

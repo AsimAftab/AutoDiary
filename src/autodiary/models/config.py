@@ -92,6 +92,34 @@ class AppConfig(BaseModel):
             raise ValueError("Min delay cannot be greater than max delay")
         return self
 
+    @model_validator(mode="after")
+    def validate_internship_dates(self) -> "AppConfig":
+        """Validate internship start and end dates."""
+        from datetime import datetime
+
+        if not self.internship_start_date:
+            return self
+
+        try:
+            start = datetime.strptime(self.internship_start_date, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError(
+                f"Invalid internship_start_date format: {self.internship_start_date}. Use YYYY-MM-DD"
+            ) from None
+
+        if self.internship_end_date and self.internship_end_date.lower() != "today":
+            try:
+                end = datetime.strptime(self.internship_end_date, "%Y-%m-%d")
+            except ValueError:
+                raise ValueError(
+                    f"Invalid internship_end_date format: {self.internship_end_date}. Use YYYY-MM-DD"
+                ) from None
+
+            if start > end:
+                raise ValueError("Internship start date cannot be after end date")
+
+        return self
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {

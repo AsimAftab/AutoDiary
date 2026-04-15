@@ -22,8 +22,12 @@ from autodiary.cli.utils import (
     print_warning,
 )
 from autodiary.core.client import VTUApiClient
+from autodiary.utils.validators import validate_date_format
 
 console = Console()
+
+MAX_FAILED_ENTRIES_DISPLAY = 10
+UPLOAD_PROGRESS_FILE = Path.home() / ".autodiary" / ".upload_progress.json"
 
 
 class UploadMenu:
@@ -97,7 +101,8 @@ class UploadMenu:
             internship = client.get_internship_config()
             holidays = client.get_holiday_config()
         except Exception as e:
-            print_error(f"Failed to fetch configuration from server: {e}")
+            print_error(f"Failed to fetch configuration: {e}")
+            print_info("Try Configuration > Test Connection to diagnose the issue.")
             questionary.press_any_key_to_continue().ask()
             return
 
@@ -122,16 +127,25 @@ class UploadMenu:
                 existing_dates = client.fetch_existing_dates()
             except Exception as e:
                 print_error(f"Failed to fetch existing entries: {e}")
+                print_info("Try Configuration > Test Connection to diagnose the issue.")
                 return
             console.print(f"[dim]Found {len(existing_dates)} existing entries[/dim]\n")
 
         # Assign dates to entries
         entries_with_dates = self._assign_dates_to_entries(entries, working_dates, existing_dates)
 
-        # Show summary
-        self._show_upload_summary(entries_with_dates, existing_dates, holidays)
+        # Check for duplicates
+        self._warn_duplicates(entries_with_dates)
 
-        if not questionary.confirm("\nProceed with upload?", default=True).ask():
+        # Show summary
+        new_count, skip_count = self._show_upload_summary(
+            entries_with_dates, existing_dates, holidays
+        )
+
+        if not questionary.confirm(
+            f"\nUpload {new_count} entries (skipping {skip_count} existing). Proceed?",
+            default=True,
+        ).ask():
             print_warning("Upload cancelled")
             return
 
@@ -146,7 +160,7 @@ class UploadMenu:
         # Get date range
         start_date = questionary.text(
             "Start date (YYYY-MM-DD):",
-            validate=lambda x: self._validate_date(x) or "Invalid date format",
+            validate=lambda x: validate_date_format(x) or "Invalid date format",
         ).ask()
 
         if not start_date:
@@ -154,10 +168,15 @@ class UploadMenu:
 
         end_date = questionary.text(
             "End date (YYYY-MM-DD):",
-            validate=lambda x: self._validate_date(x) or "Invalid date format",
+            validate=lambda x: validate_date_format(x) or "Invalid date format",
         ).ask()
 
         if not end_date:
+            return
+
+        # Validate date range early before proceeding
+        if start_date > end_date:
+            print_error("Start date cannot be after end date")
             return
 
         dry_run = questionary.confirm("Dry run (validate without uploading)?", default=False).ask()
@@ -167,9 +186,9 @@ class UploadMenu:
         self.upload_with_auto_dates(dry_run=dry_run, start_date=start_date, end_date=end_date)
 
     def dry_run_upload(self) -> None:
-        """Validate entries without uploading."""
+        """Validate entries and preview date assignments without uploading."""
         console.print()
-        print_header("🔍 Dry Run - Validate Entries")
+        print_header("🔍 Dry Run - Validate & Preview")
 
         entries_path = self._get_entries_file()
         if not entries_path:
@@ -179,17 +198,27 @@ class UploadMenu:
         if not entries:
             return
 
+        # Validate entries first
         console.print("\n[bold]Validating entries...[/bold]\n")
-
+        valid = True
         for i, entry in enumerate(entries, 1):
             try:
                 self._validate_entry(entry, i)
                 console.print(f"[green]✓[/green] Entry {i}: Valid")
             except Exception as e:
                 console.print(f"[red]✗[/red] Entry {i}: {e}")
+                valid = False
 
         console.print(f"\n[bold]Validation complete:[/bold] {len(entries)} entries checked")
-        questionary.press_any_key_to_continue().ask()
+
+        if not valid:
+            print_warning("Fix validation errors before uploading.")
+            questionary.press_any_key_to_continue().ask()
+            return
+
+        # Preview date assignments
+        if questionary.confirm("Preview date assignments?", default=True).ask():
+            self.upload_with_auto_dates(dry_run=True, entries=entries)
 
     def upload_from_file(self) -> None:
         """Upload entries from a specific file."""
@@ -378,22 +407,71 @@ class UploadMenu:
 
         return assigned
 
+    @staticmethod
+    def _warn_duplicates(entries: list[dict[str, Any]]) -> None:
+        """Warn if there are duplicate entries (same date + description)."""
+        seen: dict[str, int] = {}
+        for entry in entries:
+            key = f"{entry.get('date', '')}|{entry.get('description', '')}"
+            seen[key] = seen.get(key, 0) + 1
+
+        duplicates = {k: v for k, v in seen.items() if v > 1}
+        if duplicates:
+            print_warning(
+                f"Detected {len(duplicates)} duplicate entries (same date + description):"
+            )
+            for key, count in list(duplicates.items())[:5]:
+                date_val = key.split("|")[0] or "no date"
+                console.print(f"  • {date_val}: appears {count} times")
+
     def _show_upload_summary(
         self, entries: list[dict[str, Any]], existing_dates: set[str], holidays: dict[str, Any]
-    ) -> None:
-        """Show summary before upload."""
+    ) -> tuple[int, int]:
+        """Show summary before upload.
+
+        Returns:
+            Tuple of (new_entry_count, skip_count)
+        """
         console.print("\n[bold]Upload Summary:[/bold]\n")
         console.print(f"  Total entries: {len(entries)}")
 
         new_entries = [e for e in entries if e.get("date") not in existing_dates]
+        skip_count = len(entries) - len(new_entries)
         console.print(f"  New entries to upload: {len(new_entries)}")
-        console.print(f"  Existing entries to skip: {len(entries) - len(new_entries)}")
+        console.print(f"  Existing entries to skip: {skip_count}")
 
         # Show first few entries
         if new_entries:
             console.print("\n[dim]First few entries to upload:[/dim]")
             for entry in new_entries[:3]:
                 console.print(f"  • {entry.get('date')}: {entry.get('description', '')[:50]}...")
+
+        return len(new_entries), skip_count
+
+    @staticmethod
+    def _load_upload_progress() -> set[str]:
+        """Load previously uploaded dates from progress file."""
+        if UPLOAD_PROGRESS_FILE.exists():
+            try:
+                data = json.loads(UPLOAD_PROGRESS_FILE.read_text(encoding="utf-8"))
+                return set(data.get("uploaded_dates", []))
+            except (json.JSONDecodeError, OSError):
+                return set()
+        return set()
+
+    @staticmethod
+    def _save_upload_progress(uploaded_dates: set[str]) -> None:
+        """Save uploaded dates to progress file."""
+        UPLOAD_PROGRESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        UPLOAD_PROGRESS_FILE.write_text(
+            json.dumps({"uploaded_dates": sorted(uploaded_dates)}),
+            encoding="utf-8",
+        )
+
+    @staticmethod
+    def _clear_upload_progress() -> None:
+        """Remove upload progress file."""
+        UPLOAD_PROGRESS_FILE.unlink(missing_ok=True)
 
     def _perform_upload(
         self, client: VTUApiClient, entries: list[dict[str, Any]], dry_run: bool
@@ -409,6 +487,21 @@ class UploadMenu:
                 )
             return
 
+        # Check for resumable progress
+        previously_uploaded = self._load_upload_progress()
+        if previously_uploaded:
+            remaining = [e for e in entries if e.get("date") not in previously_uploaded]
+            if remaining and len(remaining) < len(entries):
+                skipped = len(entries) - len(remaining)
+                if questionary.confirm(
+                    f"Found {skipped} previously uploaded entries. Resume from where you left off?",
+                    default=True,
+                ).ask():
+                    entries = remaining
+                    print_info(f"Resuming upload — {skipped} entries already done")
+                else:
+                    previously_uploaded = set()
+
         with create_progress_bar() as progress:
             task = progress.add_task("Uploading entries...", total=len(entries))
 
@@ -422,10 +515,15 @@ class UploadMenu:
 
                 if success:
                     success_count += 1
+                    previously_uploaded.add(entry.get("date", ""))
+                    self._save_upload_progress(previously_uploaded)
                 else:
                     failed_entries.append((entry.get("date", "unknown"), message))
 
                 progress.update(task, advance=1)
+
+        # Clear progress file on completion
+        self._clear_upload_progress()
 
         console.print("\n[bold]Upload Results:[/bold]\n")
         console.print(f"  [green]✓[/green] Success: {success_count}")
@@ -433,10 +531,14 @@ class UploadMenu:
 
         if failed_entries:
             console.print("\n[yellow]Failed entries:[/yellow]")
-            for entry_date, msg in failed_entries[:10]:
+            for entry_date, msg in failed_entries[:MAX_FAILED_ENTRIES_DISPLAY]:
                 console.print(f"  • {entry_date}: {msg}")
-            if len(failed_entries) > 10:
-                console.print(f"  ... and {len(failed_entries) - 10} more")
+            if len(failed_entries) > MAX_FAILED_ENTRIES_DISPLAY:
+                console.print(f"  ... and {len(failed_entries) - MAX_FAILED_ENTRIES_DISPLAY} more")
+                if questionary.confirm("\nReview all failed entries?", default=False).ask():
+                    console.print("\n[yellow]All failed entries:[/yellow]")
+                    for entry_date, msg in failed_entries:
+                        console.print(f"  • {entry_date}: {msg}")
 
         questionary.press_any_key_to_continue().ask()
 
@@ -482,11 +584,3 @@ class UploadMenu:
                 datetime.strptime(entry["date"], "%Y-%m-%d")
             except ValueError:
                 raise ValueError(f"Invalid date format: {entry['date']}") from None
-
-    def _validate_date(self, date_str: str) -> bool:
-        """Validate date format."""
-        try:
-            datetime.strptime(date_str, "%Y-%m-%d")
-            return True
-        except ValueError:
-            return False

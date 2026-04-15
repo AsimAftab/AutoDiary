@@ -458,23 +458,52 @@ uploading internship diary entries to the VTU portal.
             questionary.press_any_key_to_continue().ask()
             return
 
+        # Optional search filter
+        search = (
+            (
+                questionary.text(
+                    "Search skills (leave empty to show all):",
+                ).ask()
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+
+        display_skills = skills
+        if search:
+            display_skills = [
+                s
+                for s in skills
+                if search in s.get("name", "").lower() or search in str(s.get("id", ""))
+            ]
+            if not display_skills:
+                print_warning(f"No skills matching '{search}'")
+                questionary.press_any_key_to_continue().ask()
+                return
+
         # Create a table to display skills
+        title = (
+            f"[SKILLS MATCHING '{search.upper()}']"
+            if search
+            else "[AVAILABLE SKILLS FOR DIARY ENTRIES]"
+        )
         table = Table(
-            title="[AVAILABLE SKILLS FOR DIARY ENTRIES]",
+            title=title,
             show_header=True,
             header_style="bold magenta",
         )
         table.add_column("ID", style="cyan", width=6)
         table.add_column("Skill Name", style="white")
 
-        # Add skills to table (show in pages if too many)
-        for skill in skills:
+        for skill in display_skills:
             skill_id = str(skill.get("id", ""))
             skill_name = skill.get("name", "Unknown")
             table.add_row(skill_id, skill_name)
 
         console.print()
         console.print(table)
+        console.print(f"\n[dim]Showing {len(display_skills)} of {len(skills)} skills[/dim]")
         console.print()
 
         # Show usage information

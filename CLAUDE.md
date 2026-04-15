@@ -4,162 +4,63 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VTU Auto Diary Filler is a Python CLI tool that automates uploading internship diary entries to the VTU internship portal API. It handles authentication, date assignment, holiday filtering, and retry logic.
+VTU Auto Diary Filler is a Python 3.11+ interactive CLI application that automates uploading internship diary entries to the VTU internship portal API. It uses Rich for terminal UI, questionary for interactive prompts, and Pydantic for data validation.
 
-## Setup
+## Setup & Common Commands
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-Or using `setup.py`:
-```powershell
-pip install .
-```
-
-## Configuration
-
-Copy example configs and fill in your details:
+Uses `uv` as the package manager. All commands assume you're in the project root.
 
 ```powershell
-Copy-Item config\settings.example.json config\settings.json
-Copy-Item entries\diary_entries.example.json entries\diary_entries.json
-Copy-Item .env.example .env
+uv sync                              # Install all dependencies (creates .venv automatically)
+uv run autodiary                     # Run the application (or: uv run python -m autodiary)
+uv run ruff format --check .         # Check formatting
+uv run ruff check .                  # Lint
+uv run ruff format .                 # Auto-format
+uv run pytest                        # Run all tests
+uv run pytest tests/test_config.py   # Run a single test file
+uv run pyinstaller --clean autodiary.spec  # Build Windows executable → dist/AutoDiary.exe
 ```
-
-**Required in `.env`:**
-- `VTU_EMAIL` - Your VTU portal email
-- `VTU_PASSWORD` - Your VTU portal password
-
-**Required in `config/settings.json`:**
-- `defaults.internship_id` - Your internship ID
-- `defaults.internship_start_date` - Format: `YYYY-MM-DD`
-- `defaults.holiday_weekdays` - Example: `["Sunday"]`
-
-## Common Commands
-
-### Dry Run (validate entries without uploading)
-```powershell
-python scripts\upload_diaries.py --dry-run
-```
-
-### Upload with auto-date assignment and skip existing
-```powershell
-python scripts\upload_diaries.py --auto-dates --skip-existing
-```
-
-### Upload all entries
-```powershell
-python scripts\upload_diaries.py
-```
-
-### Test login only
-```powershell
-python scripts\upload_diaries.py --login-only
-```
-
-### Print existing diary dates from portal
-```powershell
-python scripts\upload_diaries.py --print-existing
-```
-
-### Fetch all existing entries from portal
-```powershell
-python scripts\fetch_previous_entries.py
-```
-Saves to `previous_entries/all_entries.json`.
 
 ## Architecture
 
-### Core Components
+### Package Layout (`src/autodiary/`)
 
-**AutoDiaryClient (`scripts/upload_diaries.py`)**
-- Main client class handling API communication
-- Supports three auth modes: `login` (credential-based), `bearer` (token), `cookie`
-- Implements retry logic with configurable delays and max attempts
-- Automatic re-authentication on token expiry (login mode)
+- **`__main__.py`** — Entry point. Bootstraps `~/.autodiary/` directory, sets up file logging, initializes `ConfigManager`, launches `MainMenu`.
+- **`cli/`** — Interactive menu system (all terminal UI lives here):
+  - `MainMenu` dispatches to `UploadMenu`, `ViewMenu`, `ConfigMenu`
+  - `UploadMenu` — Upload workflows: auto-dates, date range, dry run, from file, interactive review
+  - `ViewMenu` — View entries, statistics, download JSON, export CSV
+  - `ConfigMenu` — Setup wizard, edit credentials/internship/holidays, test connection, reset
+  - `utils.py` — Shared Rich formatting helpers (`print_success`, `print_error`, etc.)
+- **`core/`** — Business logic (no UI concerns):
+  - `VTUApiClient` — API communication via `requests.Session`, credential-based auth with auto re-auth on 401, retry logic with configurable delays
+  - `ConfigManager` — Load/save/migrate config, atomic file writes, password encryption/decryption, `is_configured` property
+- **`models/`** — Pydantic v2 models:
+  - `AppConfig` — Validates all settings (email, internship dates, holidays, retry config)
+  - `DiaryEntry` — Validates diary submissions (description, hours, learnings, mood_slider, skill_ids)
+- **`utils/`** — Helpers:
+  - `CryptoManager` — Fernet symmetric encryption for password storage, key file at `~/.autodiary/.encryption_key`
+  - `validators.py` — Input validation functions, first-run detection
+- **`resources/`** — Bundled assets: `skills_mapping.json` (VTU skill IDs), config/entry templates, app icon
 
-**Entry Processing Pipeline:**
-1. Load entries from `entries/diary_entries.json`
-2. Validate required keys: `description`, `hours`, `links`, `blockers`, `learnings`, `mood_slider`, `skill_ids`
-3. Optionally fetch existing dates from API for idempotency
-4. Apply holiday filters (weekdays + specific dates)
-5. Auto-assign missing dates from internship date range if enabled
-6. Upload entries with retry logic
+### Data Flow
 
-**Configuration Files:**
-- `config/settings.json` - API endpoints, timeouts, retry config, defaults
-- `.env` - Credentials (VTU_EMAIL, VTU_PASSWORD) and holiday overrides
-- `entries/diary_entries.json` - Array of diary entry objects
+1. First run triggers setup wizard (ConfigMenu) → writes `~/.autodiary/config.json` with encrypted password
+2. User selects upload workflow from UploadMenu
+3. Diary entries loaded from JSON file, validated via `DiaryEntry` Pydantic model
+4. `VTUApiClient` authenticates (login → access token cookie), fetches existing dates for idempotency
+5. Holiday filter applied (weekday + specific date exclusions), auto-date assignment if enabled
+6. Entries uploaded with retry logic, random delays between requests
 
-**Holiday Behavior:**
-- Entries falling on configured holiday weekdays or dates are automatically skipped
-- Environment variables can override settings: `HOLIDAY_WEEKDAYS`, `HOLIDAY_DATES`
+### Configuration
 
-### Authentication Modes
+All config lives at `~/.autodiary/config.json` (created by the app's setup wizard). Passwords are Fernet-encrypted. No `.env` files — credentials are managed through the interactive ConfigMenu.
 
-**login mode (recommended):**
-- Uses credentials to obtain access token cookie
-- Auto re-authenticates on 401/token-expired responses
-- Guarded by `max_login_attempts` setting
+### CI/CD
 
-**bearer mode:**
-- Requires `auth.access_token` in settings
-- Sets `Authorization: Bearer <token>` header
+- `.github/workflows/ci.yml` — Runs Ruff + pytest on push/PR to main (Windows runner)
+- `.github/workflows/release.yml` — Builds `AutoDiary.exe` via PyInstaller on GitHub Release publish
 
-**cookie mode:**
-- Requires `auth.cookie` or `auth.access_token` in settings
-- Sets `Cookie` header with access_token
+### Style
 
-### Key Methods in AutoDiaryClient
-
-- `login_with_guard()` - Performs login with retry attempts
-- `request_with_reauth()` - Wraps requests with auto re-authentication
-- `fetch_existing_dates()` - Paginated fetch of all diary dates
-- `build_working_dates()` - Generates list of valid working days
-- `assign_missing_dates()` - Auto-assigns dates to entries missing them
-- `submit_with_retries()` - Uploads single entry with retry logic
-
-## Required Entry Keys
-
-Each diary entry must contain:
-```json
-{
-  "description": "...",
-  "hours": 8,
-  "links": "",
-  "blockers": "",
-  "learnings": "...",
-  "mood_slider": 5,
-  "skill_ids": ["44", "16", "20"]
-}
-```
-
-Optional: `"date": "YYYY-MM-DD"` - If omitted, can be auto-assigned.
-
-## CLI Structure
-
-Uses Typer for CLI with both legacy options and subcommands:
-
-**Legacy style (options on root):**
-```powershell
-python scripts\upload_diaries.py --dry-run --auto-dates --skip-existing
-```
-
-**Subcommands style:**
-```powershell
-python scripts\upload_diaries.py run --dry-run --auto-dates
-python scripts\upload_diaries.py login --show-access-token
-python scripts\upload_diaries.py existing
-python scripts\upload_diaries.py interactive
-```
-
-Both styles are equivalent. The `interactive` subcommand prompts for options.
-
-## Security Notes
-
-- `.env` and `config/settings.json` are gitignored
-- Never commit credentials or access tokens
-- Access tokens are stored in session cookies only (login mode)
+Ruff handles all linting and formatting. Config in `pyproject.toml`: 100-char line length, double quotes, rules E/W/F/I/C4/B/UP enabled. See `AGENTS.md` for commit conventions and contributor guidelines.

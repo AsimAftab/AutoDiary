@@ -23,6 +23,7 @@ from autodiary.cli.utils import (
     print_warning,
 )
 from autodiary.core.client import VTUApiClient
+from autodiary.utils.validators import validate_date_format
 
 console = Console()
 
@@ -97,7 +98,7 @@ class ViewMenu:
 
         start_date = questionary.text(
             "Start date (YYYY-MM-DD):",
-            validate=lambda x: self._validate_date(x) or "Invalid date format",
+            validate=lambda x: validate_date_format(x) or "Invalid date format",
         ).ask()
 
         if not start_date:
@@ -105,7 +106,7 @@ class ViewMenu:
 
         end_date = questionary.text(
             "End date (YYYY-MM-DD):",
-            validate=lambda x: self._validate_date(x) or "Invalid date format",
+            validate=lambda x: validate_date_format(x) or "Invalid date format",
         ).ask()
 
         if not end_date:
@@ -257,8 +258,21 @@ class ViewMenu:
             save_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(save_path, "w", newline="", encoding="utf-8") as f:
-                # Collect all unique keys across entries for consistent columns
-                fieldnames = sorted({k for entry in entries for k in entry})
+                # Use logical field ordering; append any extra keys alphabetically
+                preferred_order = [
+                    "date",
+                    "description",
+                    "hours",
+                    "learnings",
+                    "mood_slider",
+                    "skill_ids",
+                    "links",
+                    "blockers",
+                    "internship_id",
+                ]
+                all_keys = {k for entry in entries for k in entry}
+                fieldnames = [k for k in preferred_order if k in all_keys]
+                fieldnames += sorted(all_keys - set(fieldnames))
                 writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
                 writer.writeheader()
                 writer.writerows(entries)
@@ -386,11 +400,3 @@ class ViewMenu:
             "mood_distribution": mood_dist,
             "skill_counts": skill_counts,
         }
-
-    def _validate_date(self, date_str: str) -> bool:
-        """Validate date format."""
-        try:
-            datetime.strptime(date_str, "%Y-%m-%d")
-            return True
-        except ValueError:
-            return False

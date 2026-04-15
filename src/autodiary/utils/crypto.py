@@ -3,9 +3,14 @@ Cryptography utilities for secure password storage.
 """
 
 import hashlib
+import logging
+import stat
+import sys
 from pathlib import Path
 
 from cryptography.fernet import Fernet
+
+LOGGER = logging.getLogger("autodiary")
 
 
 class CryptoManager:
@@ -43,6 +48,9 @@ class CryptoManager:
                 Fernet(self._key)
             except Exception as e:
                 raise ValueError(f"Invalid encryption key in {self.key_file}: {e}") from e
+
+            # Verify file permissions are restrictive
+            self._check_key_permissions()
         else:
             # Generate new key atomically with restricted permissions from the start
             import os
@@ -60,6 +68,24 @@ class CryptoManager:
                 self._key = self.key_file.read_bytes()
 
         return self._key
+
+    def _check_key_permissions(self) -> None:
+        """Warn if the encryption key file has overly permissive access."""
+        if sys.platform == "win32":
+            LOGGER.debug("Skipping POSIX permission check on Windows for %s", self.key_file)
+            return
+
+        try:
+            mode = self.key_file.stat().st_mode
+            if mode & (stat.S_IRWXG | stat.S_IRWXO):
+                LOGGER.warning(
+                    "Encryption key file %s has insecure permissions %s. Run: chmod 600 %s",
+                    self.key_file,
+                    oct(mode),
+                    self.key_file,
+                )
+        except OSError as e:
+            LOGGER.debug("Could not check key file permissions: %s", e)
 
     @property
     def fernet(self) -> Fernet:

@@ -46,6 +46,8 @@ class ConfigMenu:
                     {"name": "Advanced Settings", "value": "advanced"},
                     {"name": "Test Connection", "value": "test"},
                     {"name": "View Current Configuration", "value": "view"},
+                    {"name": "Backup Configuration", "value": "backup"},
+                    {"name": "Restore from Backup", "value": "restore"},
                     {"name": "Reset to Defaults", "value": "reset"},
                     {"name": "← Back to Main Menu", "value": "back"},
                 ],
@@ -69,6 +71,10 @@ class ConfigMenu:
                 self.test_connection()
             elif choice == "view":
                 self.view_configuration()
+            elif choice == "backup":
+                self.backup_config()
+            elif choice == "restore":
+                self.restore_config()
             elif choice == "reset":
                 self.reset_to_defaults()
 
@@ -107,10 +113,13 @@ class ConfigMenu:
                 )
             console.print("[dim]Your credentials will be encrypted and stored locally.[/dim]\n")
 
-            email = questionary.text(
-                "Your VTU email address:",
-                validate=lambda x: validate_email(x) or "Invalid email format",
-            ).ask()
+            email = (
+                questionary.text(
+                    "Your VTU email address:",
+                    validate=lambda x: validate_email(x.strip()) or "Invalid email format",
+                ).ask()
+                or ""
+            ).strip()
 
             if not email:
                 print_warning("Setup cancelled by user")
@@ -145,9 +154,11 @@ class ConfigMenu:
 
                 # Create client and fetch internships
                 client = VTUApiClient(temp_config_manager)
-                print_info("Connecting to VTU portal...")
 
-                if not client.login(email, password):
+                with console.status("[bold cyan]Connecting to VTU portal...[/bold cyan]"):
+                    login_ok = client.login(email, password)
+
+                if not login_ok:
                     print_error(
                         "Failed to login to VTU portal. Please check your email and password."
                     )
@@ -169,8 +180,8 @@ class ConfigMenu:
                 print_success("Login successful!")
 
                 # Fetch available internships
-                print_info("Fetching your internships...")
-                internships = self._fetch_user_internships(client)
+                with console.status("[bold cyan]Fetching your internships...[/bold cyan]"):
+                    internships = self._fetch_user_internships(client)
 
                 # Successfully logged in and fetched data, break the retry loop
                 break
@@ -214,8 +225,8 @@ class ConfigMenu:
                 print_warning("Setup cancelled by user")
                 return False
 
-            title = questionary.text("Internship title (optional):").ask() or ""
-            company = questionary.text("Company name (optional):").ask() or ""
+            title = (questionary.text("Internship title (optional):").ask() or "").strip()
+            company = (questionary.text("Company name (optional):").ask() or "").strip()
 
             start_date = questionary.text(
                 "Internship start date (YYYY-MM-DD):",
@@ -261,8 +272,8 @@ class ConfigMenu:
                     print_warning("Setup cancelled by user")
                     return False
 
-                title = questionary.text("Internship title (optional):").ask() or ""
-                company = questionary.text("Company name (optional):").ask() or ""
+                title = (questionary.text("Internship title (optional):").ask() or "").strip()
+                company = (questionary.text("Company name (optional):").ask() or "").strip()
 
                 start_date = questionary.text(
                     "Internship start date (YYYY-MM-DD):",
@@ -315,12 +326,12 @@ class ConfigMenu:
 
         # Step 3: Holiday Configuration
         console.print("\n[bold cyan]Step 3 of 5: Holiday Configuration[/bold cyan]")
-        console.print("[dim]Select which days should be considered holidays/weekends.[/dim]\n")
+        console.print("[dim]Select days to EXCLUDE from diary uploads (e.g., weekends).[/dim]\n")
 
         holiday_weekdays = questionary.checkbox(
-            "Select weekend days:",
+            "Select days to exclude from uploads:",
             choices=get_valid_weekdays(),
-            validate=lambda x: len(x) > 0 or "Select at least one holiday day",
+            validate=lambda x: len(x) > 0 or "Select at least one day to exclude",
         ).ask()
 
         if not holiday_weekdays:
@@ -443,10 +454,15 @@ class ConfigMenu:
 
         console.print()
 
-        email = questionary.text(
-            "New email address (leave empty to keep current):",
-            validate=lambda x: not x or validate_email(x) or "Invalid email format",
-        ).ask()
+        email = (
+            questionary.text(
+                "New email address (leave empty to keep current):",
+                validate=lambda x: (
+                    not x.strip() or validate_email(x.strip()) or "Invalid email format"
+                ),
+            ).ask()
+            or ""
+        ).strip()
 
         password = questionary.password("New password (leave empty to keep current):").ask()
 
@@ -509,8 +525,12 @@ class ConfigMenu:
             ),
         ).ask()
 
-        title = questionary.text("Internship title (leave empty to keep current):").ask()
-        company = questionary.text("Company name (leave empty to keep current):").ask()
+        title = (
+            questionary.text("Internship title (leave empty to keep current):").ask() or ""
+        ).strip()
+        company = (
+            questionary.text("Company name (leave empty to keep current):").ask() or ""
+        ).strip()
 
         if not any([internship_id, start_date, end_date, title, company]):
             print_warning("No changes made")
@@ -534,7 +554,7 @@ class ConfigMenu:
         except Exception as e:
             print_error(f"Failed to update settings: {e}")
 
-    def _fetch_user_internships(self, client) -> list:
+    def _fetch_user_internships(self, client: VTUApiClient) -> list:
         """
         Fetch available internships for the user.
 
@@ -758,7 +778,7 @@ class ConfigMenu:
         console.print()
 
         holiday_weekdays = questionary.checkbox(
-            "Select weekend days (current selections are pre-selected):",
+            "Select days to exclude from uploads (current selections pre-selected):",
             choices=get_valid_weekdays(),
             default=[day.capitalize() for day in config.holiday_weekdays],
         ).ask()
@@ -933,6 +953,53 @@ class ConfigMenu:
 
         except Exception as e:
             print_error(f"Failed to load configuration: {e}")
+
+        console.print()
+        questionary.press_any_key_to_continue().ask()
+
+    def backup_config(self) -> None:
+        """Create a backup of current configuration."""
+        console.print()
+        print_header("💾 Backup Configuration")
+
+        try:
+            backup_path = self.config_manager.backup()
+            print_success(f"Configuration backed up to: {backup_path}")
+        except Exception as e:
+            print_error(f"Failed to create backup: {e}")
+
+        console.print()
+        questionary.press_any_key_to_continue().ask()
+
+    def restore_config(self) -> None:
+        """Restore configuration from a backup."""
+        console.print()
+        print_header("🔄 Restore from Backup")
+
+        backups = self.config_manager.list_backups()
+        if not backups:
+            print_warning("No backups found.")
+            questionary.press_any_key_to_continue().ask()
+            return
+
+        choices = [
+            {"name": f"{b.name} ({b.stat().st_size} bytes)", "value": str(b)} for b in backups
+        ]
+        choices.append({"name": "← Cancel", "value": "cancel"})
+
+        selected = questionary.select("Select backup to restore:", choices=choices).ask()
+
+        if not selected or selected == "cancel":
+            print_warning("Restore cancelled")
+            return
+
+        try:
+            from pathlib import Path
+
+            self.config_manager.restore(Path(selected))
+            print_success("Configuration restored successfully!")
+        except Exception as e:
+            print_error(f"Failed to restore backup: {e}")
 
         console.print()
         questionary.press_any_key_to_continue().ask()

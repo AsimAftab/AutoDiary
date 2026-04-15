@@ -150,14 +150,11 @@ class ConfigManager:
         Raises:
             ValueError: If password decryption fails or config not loaded
         """
-        if self._config is None:
-            self.load()
-
-        if not self._config.password_encrypted:
+        if not self.config.password_encrypted:
             return ""
 
         try:
-            return self.crypto.decrypt(self._config.password_encrypted)
+            return self.crypto.decrypt(self.config.password_encrypted)
         except Exception as e:
             raise ValueError(f"Failed to decrypt password: {e}") from e
 
@@ -167,14 +164,8 @@ class ConfigManager:
 
         Args:
             password: Plain text password
-
-        Raises:
-            ValueError: If config not loaded
         """
-        if self._config is None:
-            raise ValueError("Configuration not loaded")
-
-        self._config.password_encrypted = self.crypto.encrypt(password)
+        self.config.password_encrypted = self.crypto.encrypt(password)
 
     def get_api_config(self) -> dict[str, Any]:
         """
@@ -183,15 +174,12 @@ class ConfigManager:
         Returns:
             API configuration dictionary
         """
-        if self._config is None:
-            self.load()
-
         return {
-            "base_url": self._config.api_base_url,
-            "timeout": self._config.timeout_seconds,
-            "request_delay_min": self._config.request_delay_min,
-            "request_delay_max": self._config.request_delay_max,
-            "max_retries": self._config.max_retries,
+            "base_url": self.config.api_base_url,
+            "timeout": self.config.timeout_seconds,
+            "request_delay_min": self.config.request_delay_min,
+            "request_delay_max": self.config.request_delay_max,
+            "max_retries": self.config.max_retries,
         }
 
     def get_internship_config(self) -> dict[str, Any]:
@@ -201,15 +189,12 @@ class ConfigManager:
         Returns:
             Internship configuration dictionary
         """
-        if self._config is None:
-            self.load()
-
         return {
-            "id": self._config.internship_id,
-            "start_date": self._config.internship_start_date,
-            "end_date": self._config.internship_end_date,
-            "title": self._config.internship_title,
-            "company": self._config.company_name,
+            "id": self.config.internship_id,
+            "start_date": self.config.internship_start_date,
+            "end_date": self.config.internship_end_date,
+            "title": self.config.internship_title,
+            "company": self.config.company_name,
         }
 
     def get_holiday_config(self) -> dict[str, Any]:
@@ -219,12 +204,9 @@ class ConfigManager:
         Returns:
             Holiday configuration dictionary
         """
-        if self._config is None:
-            self.load()
-
         return {
-            "weekdays": self._config.holiday_weekdays,
-            "dates": self._config.holiday_dates,
+            "weekdays": self.config.holiday_weekdays,
+            "dates": self.config.holiday_dates,
         }
 
     def get_credentials(self) -> dict[str, str]:
@@ -234,11 +216,8 @@ class ConfigManager:
         Returns:
             Credentials dictionary with email and decrypted password
         """
-        if self._config is None:
-            self.load()
-
         return {
-            "email": self._config.email,
+            "email": self.config.email,
             "password": self.get_password(),
         }
 
@@ -253,18 +232,15 @@ class ConfigManager:
         Raises:
             ValueError: If config not loaded or field doesn't exist
         """
-        if self._config is None:
-            raise ValueError("Configuration not loaded")
-
         # Special handling for password (maps to password_encrypted)
         if field == "password":
             self.set_password(value)
             return
 
-        if not hasattr(self._config, field):
+        if not hasattr(self.config, field):
             raise ValueError(f"Unknown configuration field: {field}")
 
-        setattr(self._config, field, value)
+        setattr(self.config, field, value)
 
     def backup(self) -> Path:
         """
@@ -280,6 +256,29 @@ class ConfigManager:
         backup_path = self.config_path.with_suffix(f".backup.{timestamp}.json")
         backup_path.write_text(self.config_path.read_text(encoding="utf-8"), encoding="utf-8")
         return backup_path
+
+    def list_backups(self) -> list[Path]:
+        """List available backup files, newest first."""
+        pattern = self.config_path.stem + ".backup.*.json"
+        backups = sorted(self.config_dir.glob(pattern), reverse=True)
+        return backups
+
+    def restore(self, backup_path: Path) -> AppConfig:
+        """
+        Restore configuration from a backup file.
+
+        Args:
+            backup_path: Path to backup file
+
+        Returns:
+            Restored configuration
+        """
+        if not backup_path.exists():
+            raise FileNotFoundError(f"Backup file not found: {backup_path}")
+
+        backup_path.replace(self.config_path)
+        self._config = None  # Force reload
+        return self.load()
 
     def reset_to_default(self) -> AppConfig:
         """

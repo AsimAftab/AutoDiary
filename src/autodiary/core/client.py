@@ -8,10 +8,29 @@ import time
 from typing import Any
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
+from autodiary import __version__
 from autodiary.core.config import ConfigManager
+from autodiary.models.api import ApiResponse, PaginatedData
 
 LOGGER = logging.getLogger("autodiary")
+
+# Retry and timing constants
+DEFAULT_RETRY_DELAY = 2.0
+DEFAULT_AUTH_RETRY_DELAY = 0.5
+DEFAULT_MAX_LOGIN_ATTEMPTS = 3
+DEFAULT_LOGIN_RETRY_DELAY = 1.0
+LOGIN_JITTER_RANGE = (0.5, 2.0)
+UPLOAD_JITTER_RANGE = (0.1, 0.8)
+UPLOAD_SUCCESS_DELAY_RANGE = (0.5, 1.5)
+BACKOFF_JITTER_RANGE = (0.5, 2.0)
+NETWORK_RETRY_JITTER_RANGE = (1.0, 3.0)
+PAGINATION_DELAY = 0.3
+MAX_PAGINATION_PAGES = 500
+RETRYABLE_STATUS_CODES = {401, 429, 502, 503, 504}
+INTERNSHIP_STATUS_ONGOING = 6
 
 
 class VTUApiClient:
@@ -35,22 +54,20 @@ class VTUApiClient:
         self.delay_max = api_config["request_delay_max"]
         self.max_retries = api_config["max_retries"]
 
-        # Session
-        self.session = requests.Session()
+        # Session with connection pooling and transport-level retries
+        self.session = self._create_session()
 
         # URLs
         self.login_url = f"{self.base_url}/api/v1/auth/login"
         self.diary_store_url = f"{self.base_url}/api/v1/student/internship-diaries/store"
         self.diary_list_url = f"{self.base_url}/api/v1/student/internship-diaries"
-        self.internship_list_url = (
-            f"{self.base_url}/api/v1/student/internship-applys?page=1&status=6"
-        )
+        self.internship_list_url = f"{self.base_url}/api/v1/student/internship-applys?page=1&status={INTERNSHIP_STATUS_ONGOING}"
 
         # Retry settings
-        self.retry_delay = 2.0
-        self.auth_retry_delay = 0.5
-        self.max_login_attempts = 3
-        self.login_retry_delay = 1.0
+        self.retry_delay = DEFAULT_RETRY_DELAY
+        self.auth_retry_delay = DEFAULT_AUTH_RETRY_DELAY
+        self.max_login_attempts = DEFAULT_MAX_LOGIN_ATTEMPTS
+        self.login_retry_delay = DEFAULT_LOGIN_RETRY_DELAY
 
         # Authentication state
         self._authenticated = False
@@ -62,11 +79,23 @@ class VTUApiClient:
             "Content-Type": "application/json",
             "Origin": self.base_url,
             "Referer": f"{self.base_url}/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
+            "User-Agent": f"AutoDiary/{__version__}",
         }
+
+    @staticmethod
+    def _create_session() -> requests.Session:
+        """Create a requests session with connection pooling and transport retries."""
+        session = requests.Session()
+        retry_strategy = Retry(
+            total=2,
+            backoff_factor=0.5,
+            status_forcelist=[502, 503, 504],
+            allowed_methods=["GET", "POST"],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        return session
 
     def login(self, email: str, password: str) -> bool:
         """
@@ -85,7 +114,7 @@ class VTUApiClient:
 
                 # Use randomized delay for login too
                 if attempt > 1:
-                    time.sleep(self.login_retry_delay + random.uniform(0.5, 2.0))
+                    time.sleep(self.login_retry_delay + random.uniform(*LOGIN_JITTER_RANGE))
 
                 response = self.session.post(
                     self.login_url,
@@ -100,8 +129,11 @@ class VTUApiClient:
                     self._authenticated = True
                     return True
 
+                # Clear stale cookies before retrying to avoid polluted auth state
+                self.session.cookies.clear()
+
                 # Retry on transient server errors and auth failures (401, 429, 5xx)
-                if response.status_code in (401, 429, 502, 503, 504):
+                if response.status_code in RETRYABLE_STATUS_CODES:
                     LOGGER.warning(
                         f"Login attempt {attempt} failed: HTTP {response.status_code} | {data}"
                     )
@@ -120,10 +152,14 @@ class VTUApiClient:
                 self._authenticated = False
                 return False
 
-            except Exception as exc:
-                LOGGER.warning(f"Login failed on attempt {attempt}: {exc}")
+            except requests.RequestException as exc:
+                LOGGER.warning(f"Login network error on attempt {attempt}: {exc}")
                 if attempt < self.max_login_attempts:
                     time.sleep(self.login_retry_delay)
+            except (ValueError, KeyError) as exc:
+                LOGGER.error(f"Login response parsing error: {exc}")
+                self._authenticated = False
+                return False
 
         LOGGER.error(f"Login failed after {self.max_login_attempts} attempts")
         self._authenticated = False
@@ -190,25 +226,31 @@ class VTUApiClient:
 
         all_items: list[dict[str, Any]] = []
         page = 1
+        max_pages = MAX_PAGINATION_PAGES
 
         while True:
+            if page > max_pages:
+                LOGGER.warning(f"Pagination exceeded {max_pages} pages, stopping")
+                break
             url = f"{self.diary_list_url}?page={page}"
             response = self.session.get(url, headers=self.headers, timeout=self.timeout)
 
             if not response.ok:
                 raise ValueError(f"Fetch failed: HTTP {response.status_code}")
 
-            data = response.json() if response.content else {}
-            if not data.get("success"):
-                raise ValueError(f"API error: {data}")
+            raw = response.json() if response.content else {}
+            api_resp = ApiResponse(**raw)
+            if not api_resp.success:
+                raise ValueError(f"API error: {raw}")
 
-            payload = data.get("data", {})
+            payload = api_resp.data or {}
             items = []
             next_page_url = None
 
             if isinstance(payload, dict):
-                items = payload.get("data", [])
-                next_page_url = payload.get("next_page_url")
+                page_data = PaginatedData(**payload)
+                items = page_data.data
+                next_page_url = page_data.next_page_url
             elif isinstance(payload, list):
                 items = payload
 
@@ -218,7 +260,7 @@ class VTUApiClient:
                 break
 
             page += 1
-            time.sleep(0.3)
+            time.sleep(PAGINATION_DELAY)
 
         return all_items
 
@@ -236,7 +278,7 @@ class VTUApiClient:
             }
             LOGGER.info(f"Fetched {len(dates)} existing diary dates")
             return dates
-        except Exception as e:
+        except (requests.RequestException, ValueError) as e:
             LOGGER.error(f"Failed to fetch existing dates: {e}")
             return set()
 
@@ -251,7 +293,7 @@ class VTUApiClient:
             entries = self._paginate_diary_list()
             LOGGER.info(f"Fetched {len(entries)} diary entries")
             return entries
-        except Exception as e:
+        except (requests.RequestException, ValueError) as e:
             LOGGER.error(f"Failed to fetch entries: {e}")
             return []
 
@@ -269,7 +311,7 @@ class VTUApiClient:
             # Human-like delay: Base random delay + small jitter
             # Industry standard to avoid simple threshold detection
             base_delay = random.uniform(self.delay_min, self.delay_max)
-            jitter = random.uniform(0.1, 0.8)
+            jitter = random.uniform(*UPLOAD_JITTER_RANGE)
             total_delay = base_delay + jitter
 
             LOGGER.info(f"Applying safety delay of {total_delay:.2f}s...")
@@ -296,7 +338,7 @@ class VTUApiClient:
                         LOGGER.info(f"Upload successful: {message}")
 
                         # Extra small delay after success to not look mechanical
-                        time.sleep(random.uniform(0.5, 1.5))
+                        time.sleep(random.uniform(*UPLOAD_SUCCESS_DELAY_RANGE))
                         return True, message
 
                     # Check if retryable error (e.g., Server Overload or Rate Limit)
@@ -304,7 +346,7 @@ class VTUApiClient:
                         if attempt < self.max_retries:
                             # Exponential backoff for safety
                             wait_time = self.retry_delay * (2 ** (attempt - 1)) + random.uniform(
-                                0.5, 2.0
+                                *BACKOFF_JITTER_RANGE
                             )
                             LOGGER.warning(
                                 f"Server busy (HTTP {response.status_code}), cooling down for {wait_time:.2f}s..."
@@ -319,7 +361,7 @@ class VTUApiClient:
 
                 except requests.RequestException as e:
                     if attempt < self.max_retries:
-                        wait_time = self.retry_delay + random.uniform(1.0, 3.0)
+                        wait_time = self.retry_delay + random.uniform(*NETWORK_RETRY_JITTER_RANGE)
                         LOGGER.warning(f"Network issue: {e}, retrying in {wait_time:.2f}s...")
                         time.sleep(wait_time)
                         continue
@@ -329,8 +371,8 @@ class VTUApiClient:
 
             return False, "Max retries exceeded"
 
-        except Exception as e:
-            LOGGER.error(f"Unexpected error during upload: {e}")
+        except requests.RequestException as e:
+            LOGGER.error(f"Network error during upload: {e}")
             return False, str(e)
 
     def upload_entries(
